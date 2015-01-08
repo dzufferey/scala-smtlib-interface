@@ -31,7 +31,9 @@ object Type {
   }
 
   def unify(t1: Type, t2: Type): Option[Map[TypeVariable, Type]] = (t1,t2) match {
-    case (Bool, Bool) | (Int, Int) | (Wildcard, _) | (_, Wildcard) =>
+    case (a,b) if a == b =>
+      Some(Map.empty[TypeVariable, Type])
+    case (Wildcard, _) | (_, Wildcard) =>
       Some(Map.empty[TypeVariable, Type])
     case (v1 @ TypeVariable(n1), v2 @ TypeVariable(n2)) =>
       if (n1 == n2) Some(Map.empty[TypeVariable, Type])
@@ -81,6 +83,12 @@ case object Bool extends Type {
 
 case object Int extends Type {
   override def toString = "Int"
+  def freeParameters = Set[TypeVariable]()
+  def alpha(subst: Map[TypeVariable, Type]) = this 
+}
+
+case object Real extends Type {
+  override def toString = "Real"
   def freeParameters = Set[TypeVariable]()
   def alpha(subst: Map[TypeVariable, Type]) = this 
 }

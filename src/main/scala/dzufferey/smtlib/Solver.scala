@@ -17,6 +17,7 @@ class Solver( th: Theory,
               cmd: String,
               options: Iterable[String],
               implicitDeclaration: Boolean,
+              incremental: Boolean,
               dumpToFile: Option[String]) {
 
   protected var stackCounter = 0
@@ -62,8 +63,8 @@ class Solver( th: Theory,
   toSolver("(set-logic "+th+")")
 
   //default declarations
-  declaredT ++= Theory.sort(th)
-  declaredS ++= Theory.fun(th).map(t => (t, Nil))
+  declaredT ++= th.declaredSorts
+  declaredS ++= th.declaredFunctions.map(t => (t, Nil))
 
   ///////////////
   ///////////////
@@ -246,24 +247,32 @@ class Solver( th: Theory,
   }
   
   def push {
-    if (implicitDeclaration) {
-      declStack.push(Set[Variable]())
-      symbolStack.push(Set[(Symbol, List[Type])]())
-      typeStack.push(Set[Type]())
+    if (incremental) {
+      if (implicitDeclaration) {
+        declStack.push(Set[Variable]())
+        symbolStack.push(Set[(Symbol, List[Type])]())
+        typeStack.push(Set[Type]())
+      }
+      stackCounter += 1
+      toSolver(Push)
+    } else {
+      Logger("smtlib", Debug, "solver is not incremental, ignoring push")
     }
-    stackCounter += 1
-    toSolver(Push)
   }
   
   def pop {
-    if (implicitDeclaration) {
-      declaredV --= declStack.pop
-      declaredS --= symbolStack.pop
-      declaredT --= typeStack.pop
+    if (incremental) {
+      if (implicitDeclaration) {
+        declaredV --= declStack.pop
+        declaredS --= symbolStack.pop
+        declaredT --= typeStack.pop
+      }
+      Logger.assert(stackCounter > 0, "smtlib", "pop -> stackCounter = " + stackCounter)
+      toSolver(Pop)
+      stackCounter -= 1
+    } else {
+      Logger("smtlib", Debug, "solver is not incremental, ignoring pop")
     }
-    Logger.assert(stackCounter > 0, "smtlib", "pop -> stackCounter = " + stackCounter)
-    toSolver(Pop)
-    stackCounter -= 1
   }
   
   def checkSat: Result = {
@@ -331,6 +340,7 @@ class Solver( th: Theory,
 
 }
 
+/** Shorthands to create solvers, uses z3 by default. */
 object Solver {
   
   //for asyn IO
@@ -343,14 +353,62 @@ object Solver {
 
   var solver = "z3"
   var solverArg = Array("-smt2", "-in")
+  var implicitDeclaration = true
+  var incremental = true
 
   def apply(th: Theory) = {
-    new Solver(th, solver, solverArg, true, None)
+    new Solver(th, solver, solverArg, implicitDeclaration, incremental, None)
   }
   
   def apply(th: Theory, file: String) = {
-    new Solver(th, solver, solverArg, true, Some(file))
+    new Solver(th, solver, solverArg, implicitDeclaration, incremental, Some(file))
   }
 
 }
 
+object Z3 {
+  
+  val solver = "z3"
+  val solverArg = Array("-smt2", "-in")
+
+  def apply(th: Theory) = {
+    new Solver(th, solver, solverArg, true, true, None)
+  }
+  
+  def apply(th: Theory, file: String) = {
+    new Solver(th, solver, solverArg, true, true, Some(file))
+  }
+
+}
+
+object CVC4 {
+  
+  val solver = "cvc4"
+  val solverArg = Array("--lang=smt2", "--incremental")
+
+  def apply(th: Theory) = {
+    new Solver(th, solver, solverArg, true, true, None)
+  }
+  
+  def apply(th: Theory, file: String) = {
+    new Solver(th, solver, solverArg, true, true, Some(file))
+  }
+
+}
+
+object DReal {
+  
+  val solver = "dReal"
+  val solverArg = Array[String]()
+
+  def apply(th: Theory) = {
+    assert(th == QF_NRA || th == QF_NRA_ODE)
+    new Solver(th, solver, solverArg, true, false, None)
+  }
+  
+  def apply(th: Theory, file: String) = {
+    assert(th == QF_NRA || th == QF_NRA_ODE)
+    new Solver(th, solver, solverArg, true, false, Some(file))
+  }
+
+}

@@ -41,6 +41,31 @@ class SolverSuite extends FunSuite {
   val rqp1 = Application(r, List(Application(q, List(p1))))
   val rqp3 = Application(r, List(Application(q, List(p3))))
 
+  test("checking z3") {
+    val form1 = And(a, Or(Not(a), b))
+    val form2 = And(a, Not(a))
+    val solver = Z3(QF_UF)
+    assert( solver.testB(form1), "sat formula")
+    assert(!solver.testB(form2), "unsat formula")
+  }
+
+  test("checking cvc4") {
+    val form1 = And(a, Or(Not(a), b))
+    val form2 = And(a, Not(a))
+    val solver = CVC4(QF_UF)
+    assert( solver.testB(form1), "sat formula")
+    assert(!solver.testB(form2), "unsat formula")
+  }
+
+  test("checking dReal") {
+    val x = Variable("x").setType(Real)
+    val form1 = Eq(x, DRealDecl.cos(x))
+    val form2 = And(Eq(x, Literal(2.0)), Eq(x, Literal(1.0)))
+    val solver1 = DReal(QF_NRA, "test1.smt2")
+    assert( solver1.testB(form1), "sat formula")
+    val solver2 = DReal(QF_NRA)
+    assert(!solver2.testB(form2), "unsat formula")
+  }
 
   test("propositional formula") {
     val form1 = And(a, Or(Not(a), b))

@@ -25,6 +25,8 @@ case class Literal[T <: AnyVal](value: T) extends Formula {
     case _: scala.Long => tpe = Int
     case _: scala.Short => tpe = Int
     case _: scala.Byte => tpe = Int
+    case _: scala.Float => tpe = Real
+    case _: scala.Double => tpe = Real
     case _ => ()
   }
 
@@ -103,6 +105,29 @@ sealed abstract class Symbol {
 
   val fix = Fix.Prefix
   val priority = 10
+
+  def arity = tpe.arity
+
+  def application(args: List[Formula]): Formula = {
+    assert(args.lengthCompare(arity) == 0, "arity of " + this + " is " + arity + ", given args: " + args.mkString(", "))
+    val app = Application(this, args)
+    val t = tpe
+    val ret = Type.freshTypeVar
+    //fill the type as much as possible
+    Type.unify(t, Function(args.map(_.tpe), ret)) match {
+      case Some(subst) if subst contains ret =>
+        //println(symbol + args.mkString("(",",",")") + ": " + subst(ret))
+        app.setType(subst(ret))
+      case _ =>
+        app
+    }
+  }
+
+  def apply(arg: Formula, args: Formula*): Formula = {
+    val allArgs = (arg +: args).toList
+    application(allArgs)
+  }
+
 }
 
 case class UnInterpretedFct(symbol: String,
@@ -128,28 +153,6 @@ sealed abstract class InterpretedFct(val symbol: String, aliases: String*) exten
   override def toString = symbol
 
   def allSymbols = symbol +: aliases
-
-  def arity = tpe.arity
-
-  def application(args: List[Formula]): Formula = {
-    assert(args.lengthCompare(arity) == 0, "arity of " + symbol + " is " + arity + ", given args: " + args.mkString(", "))
-    val app = Application(this, args)
-    val t = tpe
-    val ret = Type.freshTypeVar
-    //fill the type as much as possible
-    Type.unify(t, Function(args.map(_.tpe), ret)) match {
-      case Some(subst) if subst contains ret =>
-        //println(symbol + args.mkString("(",",",")") + ": " + subst(ret))
-        app.setType(subst(ret))
-      case _ =>
-        app
-    }
-  }
-
-  def apply(arg: Formula, args: Formula*): Formula = {
-    val allArgs = (arg +: args).toList
-    application(allArgs)
-  }
 
   def unapply(f: Formula): Option[List[Formula]] = {
     val t = this

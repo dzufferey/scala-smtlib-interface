@@ -30,6 +30,7 @@ object Names {
   def tpe(t: Type): String = t match {
     case Bool => "Bool"
     case Int => "Int"
+    case Real => "Real"
     case UnInterpreted(id) => id
     case Wildcard => Logger.logAndThrow("smtlib", Error, "Wildcard types should have been instanciated!")
     case other => Logger.logAndThrow("smtlib", Error, "not supported: " + other)
