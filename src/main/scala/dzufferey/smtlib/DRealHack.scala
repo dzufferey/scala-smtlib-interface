@@ -7,18 +7,12 @@ import java.io._
 import scala.collection.mutable.{HashSet, Stack}
 import java.util.concurrent.TimeUnit
 
-abstract class Result
-case class Sat(model: Option[Model] = None) extends Result
-case object UnSat extends Result
-case object Unknown extends Result
-case class Failure(reason: String) extends Result
-
-class Solver( th: Theory,
-              cmd: String,
-              options: Iterable[String],
-              implicitDeclaration: Boolean,
-              incremental: Boolean,
-              dumpToFile: Option[String]) {
+class DRealHack( th: Theory,
+                 cmd: String,
+                 options: Iterable[String],
+                 implicitDeclaration: Boolean,
+                 incremental: Boolean,
+                 dumpToFile: Option[String]) {
 
   protected var stackCounter = 0
 
@@ -160,22 +154,6 @@ class Solver( th: Theory,
     }
   }
 
-  def exit = {
-    toSolver(Exit)
-    try {
-      solver.waitFor
-      solverInput.close
-      solverOutput.close
-      solverError.close
-      for (f <- fileDump) f.close
-    } finally {
-      if (!released) {
-        SysCmd.release
-        released = true
-      }
-    }
-  }
-  
   def declare(t: Type) = {
     try {
       toSolver(DeclareSort(Names.tpe(t), Names.tpeArity(t)))
@@ -246,55 +224,6 @@ class Solver( th: Theory,
     }
     toSolver(Assert(f))
   }
-  
-  def push {
-    if (incremental) {
-      if (implicitDeclaration) {
-        declStack.push(Set[Variable]())
-        symbolStack.push(Set[(Symbol, List[Type])]())
-        typeStack.push(Set[Type]())
-      }
-      stackCounter += 1
-      toSolver(Push)
-    } else {
-      Logger("smtlib", Debug, "solver is not incremental, ignoring push")
-    }
-  }
-  
-  def pop {
-    if (incremental) {
-      if (implicitDeclaration) {
-        declaredV --= declStack.pop
-        declaredS --= symbolStack.pop
-        declaredT --= typeStack.pop
-      }
-      Logger.assert(stackCounter > 0, "smtlib", "pop -> stackCounter = " + stackCounter)
-      toSolver(Pop)
-      stackCounter -= 1
-    } else {
-      Logger("smtlib", Debug, "solver is not incremental, ignoring pop")
-    }
-  }
-  
-  def checkSat: Result = {
-    toSolver(CheckSat)
-    fromSolver() match {
-      case "sat" => Sat()
-      case "unsat" => UnSat
-      case "unknown" => Unknown
-      case other =>
-        Logger("smtlib", Warning, "checkSat: solver said " + other)
-        Failure(other)
-    }
-  }
-  
-  def getModel: Option[Model] = {
-    toSolver(GetModel)
-    Thread.sleep(100) //sleep a bit to let z3 make the model. TODO better!
-    Parser.parseModel(fromSolver()).map( cmds => {
-      Model(cmds, declaredV, declaredS)
-    })
-  }
 
   def testB(f: Formula): Boolean = {
     test(f) match {
@@ -310,106 +239,47 @@ class Solver( th: Theory,
 
   def test(conjuncts: List[Formula]): Result = {
     conjuncts.foreach(Checks(_))
-    push
     conjuncts.foreach(assert(_))
-    val res = checkSat
-    pop
-    res
-  }
-
-  def testWithModel(f: Formula): Result = {
-    testWithModel(FormulaUtils.getConjuncts(f))
-  }
-
-  def testWithModel(conjuncts: List[Formula]): Result = {
-    conjuncts.foreach(Checks(_))
-    push
-    conjuncts.foreach(assert(_))
-    val res = checkSat match {
-      case Sat(None) =>
-        getModel match {
-          case Some(m) => Sat(Some(m))
-          case None =>
-            Logger("smtlib", Warning, "testWithModel: could not get model")
-            Sat()
-        }
-      case other => other
+    toSolver(CheckSat)
+    toSolver(Exit)
+    solverInput.close
+    val res = fromSolver() match {
+      case "sat" => Sat()
+      case "unsat" => UnSat
+      case "unknown" => Unknown
+      case other =>
+        Logger("smtlib", Warning, "checkSat: solver said " + other)
+        Failure(other)
     }
-    pop
+    try {
+      solver.waitFor
+      solverOutput.close
+      solverError.close
+      for (f <- fileDump) f.close
+    } finally {
+      if (!released) {
+        SysCmd.release
+        released = true
+      }
+    }
     res
   }
 
 }
 
-/** Shorthands to create solvers, uses z3 by default. */
-object Solver {
+object DReal {
   
-  //for asyn IO
-  val executor = java.util.concurrent.Executors.newCachedThreadPool()
-
-  def setCmd(cmd: Array[String]) = {
-    solver = cmd.head
-    solverArg = cmd.tail
-  }
-
-  var solver = "z3"
-  var solverArg = Array("-smt2", "-in")
-  var implicitDeclaration = true
-  var incremental = true
+  val solver = "dReal"
+  val solverArg = Array[String]()
 
   def apply(th: Theory) = {
-    new Solver(th, solver, solverArg, implicitDeclaration, incremental, None)
+    assert(th == QF_NRA || th == QF_NRA_ODE)
+    new DRealHack(th, solver, solverArg, true, false, None)
   }
   
   def apply(th: Theory, file: String) = {
-    new Solver(th, solver, solverArg, implicitDeclaration, incremental, Some(file))
+    assert(th == QF_NRA || th == QF_NRA_ODE)
+    new DRealHack(th, solver, solverArg, true, false, Some(file))
   }
 
 }
-
-object Z3 {
-  
-  val solver = "z3"
-  val solverArg = Array("-smt2", "-in")
-
-  def apply(th: Theory) = {
-    new Solver(th, solver, solverArg, true, true, None)
-  }
-  
-  def apply(th: Theory, file: String) = {
-    new Solver(th, solver, solverArg, true, true, Some(file))
-  }
-
-}
-
-object CVC4 {
-  
-  val solver = "cvc4"
-  val solverArg = Array("--lang=smt2", "--incremental")
-
-  def apply(th: Theory) = {
-    new Solver(th, solver, solverArg, true, true, None)
-  }
-  
-  def apply(th: Theory, file: String) = {
-    new Solver(th, solver, solverArg, true, true, Some(file))
-  }
-
-}
-
-//object DReal {
-//  
-//  val solver = "dReal"
-//  val solverArg = Array[String]()
-
-//  def apply(th: Theory) = {
-//    assert(th == QF_NRA || th == QF_NRA_ODE)
-//    new Solver(th, solver, solverArg, true, false, None)
-//  }
-//  
-//  def apply(th: Theory, file: String) = {
-//    assert(th == QF_NRA || th == QF_NRA_ODE)
-//    new Solver(th, solver, solverArg, true, false, Some(file))
-//  }
-
-//}

@@ -41,7 +41,6 @@ case object QF_NRA_ODE extends Theory {
 object DRealDecl {
   //TODO redefine Plus, Minus, Times, Divides, Leq, Lt, Geq, Gt over Real ?
   val pow  =  new UnInterpretedFct( "^", Some(Real ~> Real ~> Real))
-  val sqr  =  new UnInterpretedFct( "^2", Some(Real ~> Real))
   val sqrt =  new UnInterpretedFct( "sqrt", Some(Real ~> Real))
   val exp  =  new UnInterpretedFct( "exp", Some(Real ~> Real))
   val log  =  new UnInterpretedFct( "log", Some(Real ~> Real))
@@ -54,20 +53,21 @@ object DRealDecl {
   val asin =  new UnInterpretedFct( "asin", Some(Real ~> Real))
   val acos =  new UnInterpretedFct( "acos", Some(Real ~> Real))
   val atan =  new UnInterpretedFct( "atan", Some(Real ~> Real))
+  val atan2 = new UnInterpretedFct( "atan2", Some(Real ~> Real ~> Real))
   val asinh = new UnInterpretedFct( "asinh", Some(Real ~> Real))
   val acosh = new UnInterpretedFct( "acosh", Some(Real ~> Real))
   val atanh = new UnInterpretedFct( "atanh", Some(Real ~> Real))
   val abs =   new UnInterpretedFct( "abs", Some(Real ~> Real))
-  val min =   new UnInterpretedFct( "min", Some(Real ~> Real))
-  val max =   new UnInterpretedFct( "max", Some(Real ~> Real))
 
-  val fcts = Set( pow, sqr, sqrt, exp,
-                  log, sin, cos, tan,
-                  sinh, cosh, tanh, asin,
-                  acos, atan, asinh, acosh,
-                  atanh )
+  val fcts = Set( pow, sqrt, exp, log,
+                  sin, cos, tan,
+                  sinh, cosh, tanh,
+                  asin, acos, atan, atan2,
+                  asinh, acosh, atanh )
 
+  val timeDerivative = new UnInterpretedFct( "d/dt", Some(Real ~> Real))
   val ode = Set(
-    new UnInterpretedFct( "d/dt", Some(Real ~> Real)) //TODO not only on t
+    timeDerivative
+    //TODO derivative in other variables
   )
 }

@@ -4,9 +4,9 @@ import org.scalatest._
 
 class SolverSuite extends FunSuite {
 
-  //import dzufferey.utils.Logger
-  //Logger.moreVerbose
-  //Logger.moreVerbose
+//import dzufferey.utils.Logger
+//Logger.moreVerbose
+//Logger.moreVerbose
 
   val pid = UnInterpreted("ProcessID")
 
@@ -61,7 +61,7 @@ class SolverSuite extends FunSuite {
     val x = Variable("x").setType(Real)
     val form1 = Eq(x, DRealDecl.cos(x))
     val form2 = And(Eq(x, Literal(2.0)), Eq(x, Literal(1.0)))
-    val solver1 = DReal(QF_NRA, "test1.smt2")
+    val solver1 = DReal(QF_NRA)
     assert( solver1.testB(form1), "sat formula")
     val solver2 = DReal(QF_NRA)
     assert(!solver2.testB(form2), "unsat formula")
