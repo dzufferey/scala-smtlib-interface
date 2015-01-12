@@ -7,6 +7,37 @@ import java.io._
 import scala.collection.mutable.{HashSet, Stack}
 import java.util.concurrent.TimeUnit
 
+class DRealHackI(th: Theory,
+                 cmd: String,
+                 options: Iterable[String],
+                 implicitDeclaration: Boolean,
+                 incremental: Boolean,
+                 dumpToFile: Option[String]) {
+
+
+  protected val stack = Stack[List[Formula]]()
+  protected var current = List[Formula]()
+
+  def push {
+    stack.push(current)
+    current = Nil
+  }
+  
+  def pop {
+    current = stack.pop
+  }
+
+  def assert(f: Formula) {
+    current ::= f
+  }
+
+  def checkSat: Result = {
+    val solver = new DRealHack(th, cmd, options, implicitDeclaration, incremental, dumpToFile)
+    solver.test(current ++ stack.toList.flatten)
+  }
+}
+
+
 class DRealHack( th: Theory,
                  cmd: String,
                  options: Iterable[String],
@@ -282,4 +313,16 @@ object DReal {
     new DRealHack(th, solver, solverArg, true, false, Some(file))
   }
 
+  def incremental(th: Theory) = {
+    assert(th == QF_NRA || th == QF_NRA_ODE)
+    new DRealHackI(th, solver, solverArg, true, false, None)
+  }
+  
+  def incremental(th: Theory, file: String) = {
+    assert(th == QF_NRA || th == QF_NRA_ODE)
+    new DRealHackI(th, solver, solverArg, true, false, Some(file))
+  }
+
 }
+
+

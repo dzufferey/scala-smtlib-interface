@@ -65,6 +65,19 @@ class SolverSuite extends FunSuite {
     assert( solver1.testB(form1), "sat formula")
     val solver2 = DReal(QF_NRA)
     assert(!solver2.testB(form2), "unsat formula")
+    val solver3 = DReal.incremental(QF_NRA)
+    solver3.push
+    solver3.assert(form1)
+    assert( solver3.checkSat match {
+      case Sat(_) => true
+      case _ => false
+    })
+    solver3.pop
+    solver3.assert(form2)
+    assert( solver3.checkSat match {
+      case UnSat => true
+      case _ => false
+    })
   }
 
   test("propositional formula") {
