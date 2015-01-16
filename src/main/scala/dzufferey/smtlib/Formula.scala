@@ -1,5 +1,8 @@
 package dzufferey.smtlib
 
+import dzufferey.utils.Logger
+import dzufferey.utils.LogLevel._
+
 sealed abstract class Formula {
 
   def toStringFull: String
@@ -109,7 +112,9 @@ sealed abstract class Symbol {
   def arity = tpe.arity
 
   def application(args: List[Formula]): Formula = {
-    assert(args.lengthCompare(arity) == 0, "arity of " + this + " is " + arity + ", given args: " + args.mkString(", "))
+    if (args.lengthCompare(arity) != 0) {
+      Logger("Formula", Warning, "arity of " + this + " is " + arity + ", given args: " + args.mkString(", "))
+    }
     val app = Application(this, args)
     val t = tpe
     val ret = Type.freshTypeVar
