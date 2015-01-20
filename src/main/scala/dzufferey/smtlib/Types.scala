@@ -39,37 +39,22 @@ object Type {
       if (n1 == n2) Some(Map.empty[TypeVariable, Type])
       else if (n1 < n2) Some(Map(v1 -> v2))
       else Some(Map(v2 -> v1))
-    case (v1 @ TypeVariable(_), otherType) =>
-      if (otherType.freeParameters contains v1) {
-        Logger("Typer", Error, "failed to unify: " + t1 + " ⇔ " + t2)
-        None
-      } else Some(Map(v1 -> otherType))
-    case (otherType, v1 @ TypeVariable(_)) =>
-      if (otherType.freeParameters contains v1) {
-        Logger("Typer", Error, "failed to unify: " + t1 + " ⇔ " + t2)
-        None
-      } else Some(Map(v1 -> otherType))
-    case (UnInterpreted(i1), UnInterpreted(i2)) =>
-      if (i1 == i2) Some(Map.empty[TypeVariable, Type])
-      else {
-        Logger("Typer", Error, "failed to unify: " + t1 + " ⇔ " + t2)
-        None
-      }
-    case (Function(arg1, r1), Function(arg2, r2)) =>
-      if (arg1.size == arg2.size) {
-        arg1.zip(arg2).foldLeft(Some(Map.empty[TypeVariable, Type]): Option[Map[TypeVariable, Type]])( (acc, p) => {
-          acc.flatMap( map => {
-            val t1 = p._1.alpha(map)
-            val t2 = p._2.alpha(map)
-            unify(t1, t2).map(_ ++ map)
-          })
+    case (v1 @ TypeVariable(_), otherType) if !otherType.freeParameters.contains(v1) =>
+      Some(Map(v1 -> otherType))
+    case (otherType, v1 @ TypeVariable(_)) if !otherType.freeParameters.contains(v1) =>
+      Some(Map(v1 -> otherType))
+    case (UnInterpreted(i1), UnInterpreted(i2)) if i1 == i2 =>
+      Some(Map.empty[TypeVariable, Type])
+    case (Function(arg1, r1), Function(arg2, r2)) if arg1.size == arg2.size =>
+      arg1.zip(arg2).foldLeft(Some(Map.empty[TypeVariable, Type]): Option[Map[TypeVariable, Type]])( (acc, p) => {
+        acc.flatMap( map => {
+          val t1 = p._1.alpha(map)
+          val t2 = p._2.alpha(map)
+          unify(t1, t2).map(_ ++ map)
         })
-      } else {
-        Logger("Typer", Error, "failed to unify: " + t1 + " ⇔ " + t2)
-        None
-      }
+      })
     case _ =>
-      Logger("Typer", Error, "failed to unify: " + t1 + " ⇔ " + t2)
+      Logger("Typer", Warning, "failed to unify: " + t1 + " ⇔ " + t2)
       None
   }
 
