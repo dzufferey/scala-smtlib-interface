@@ -339,6 +339,11 @@ class Solver( th: Theory,
     res
   }
 
+  def getValue(fs: Formula*): Option[List[(Formula,Formula)]] = {
+    toSolver(GetValue(fs.toList))
+    Parser.parseGetValueReply(fromSolver())
+  }
+
 }
 
 /** Shorthands to create solvers, uses z3 by default. */

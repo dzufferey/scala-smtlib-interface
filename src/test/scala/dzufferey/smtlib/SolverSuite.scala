@@ -248,6 +248,15 @@ class SolverSuite extends FunSuite {
 //  //Console.println(parsed.toString)
 //  ()
 //}
+  
+  test("get value 1") {
+    val form = Eq(x, Literal(1))
+    val solver = Solver(QF_LIA)
+    solver.assert(form)
+    assert(solver.checkSat match { case Sat(_) => true; case _ => false }, "not sat ?!?")
+    val assignements = solver.getValue(x)
+    assert(assignements == Some(List[(Formula, Formula)](x -> Literal(1))))
+  }
 
 }
 

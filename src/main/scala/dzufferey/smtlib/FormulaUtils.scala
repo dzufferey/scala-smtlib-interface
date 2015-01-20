@@ -60,7 +60,7 @@ object FormulaUtils {
   }
 
   def typeParams(app: Application): List[Type] = app.fct match {
-    case Eq | And | Or | Plus | Times => //skip those: overloaded in smtlib
+    case _: InterpretedFct => //skip those: defined/overloaded in smtlib
       Nil
     case normal =>
       val params = normal.typeParams
@@ -68,7 +68,7 @@ object FormulaUtils {
       val subst = Type.unify(normal.typeWithParams, concreteType)
       subst match {
         case Some(s) => params.map(s)
-        case None => sys.error("FormulaUtils.typeWithParams, cannot unify: " + normal.typeWithParams + ", " + concreteType)
+        case None => sys.error("FormulaUtils.typeWithParams("+app.fct+"), cannot unify: " + normal.typeWithParams + ", " + concreteType)
       }
   }
 

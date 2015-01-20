@@ -74,17 +74,27 @@ object Printer {
 
     case DefineSort(id, args, ret) =>
       writer.write("(define-sort ")
-      sys.error("TODO define-sort")
+      ???
+      writer.write(")")
 
     case DefineFun(id, args, ret, body) =>
       writer.write("(define-fun ")
-      sys.error("TODO define-fun")
+      ???
+      writer.write(")")
 
     case Exit => writer.write("(exit)")
     case CheckSat => writer.write("(check-sat)")
     case GetModel => writer.write("(get-model)")
     case Push => writer.write("(push 1)")
     case Pop => writer.write("(pop 1)")
+
+    case GetValue(ts) =>
+      writer.write("(get-value (")
+      for (t <- ts) {
+        printFormula(t)
+        writer.write(" ")
+      }
+      writer.write("))")
   }
 
 }
