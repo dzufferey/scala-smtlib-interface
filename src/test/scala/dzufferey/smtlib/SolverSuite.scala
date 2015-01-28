@@ -145,7 +145,7 @@ class SolverSuite extends FunSuite {
     assert( solver.testB(form1), "sat formula")
     assert(!solver.testB(form2), "unsat formula")
   }
-
+  
   test("overloading") {
     val t1 = UnInterpreted("T1")
     val t2 = UnInterpreted("T2")

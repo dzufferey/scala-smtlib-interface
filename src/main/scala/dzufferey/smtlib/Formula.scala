@@ -105,18 +105,18 @@ sealed abstract class Symbol {
   }
 
   def tpe: Type = instanciateType(typeParams.map( t => Type.freshTypeVar))
+  
+  def tpe(nbrArgs: Int): Type = tpe //this can be overridden variable arity symbols
 
   val fix = Fix.Prefix
   val priority = 10
 
-  def arity = tpe.arity
-
   def application(args: List[Formula]): Formula = {
-    if (args.lengthCompare(arity) != 0) {
-      Logger("Formula", Warning, "arity of " + this + " is " + arity + ", given args: " + args.mkString(", "))
+    val t = tpe(args.length)
+    if (args.lengthCompare(t.arity) != 0) {
+      Logger("Formula", Warning, "arity of " + this + " is " + t.arity + ", given args: " + args.mkString(", "))
     }
     val app = Application(this, args)
-    val t = tpe
     val ret = Type.freshTypeVar
     //fill the type as much as possible
     Type.unify(t, Function(args.map(_.tpe), ret)) match {
@@ -124,7 +124,11 @@ sealed abstract class Symbol {
         //println(symbol + args.mkString("(",",",")") + ": " + subst(ret))
         app.setType(subst(ret))
       case _ =>
-        app
+        t match {
+          case Function(_, TypeVariable(_)) => app
+          case Function(_, ret) => app.setType(ret)
+          case _ => app
+        }
     }
   }
 
@@ -178,10 +182,12 @@ case object Not extends InterpretedFct("¬", "~", "!", "unary_!", "unary_$bang")
 case object And extends InterpretedFct("∧", "&&", "$amp$amp", "and") {
   val typeWithParams = Bool ~> Bool ~> Bool
   override val priority = 5
+  override def tpe(nbrArgs: Int): Type = Function((0 until nbrArgs).map( x => Bool).toList, Bool)
 }
 case object Or extends InterpretedFct("∨", "||", "$bar$bar", "or") {
   val typeWithParams = Bool ~> Bool ~> Bool
   override val priority = 4
+  override def tpe(nbrArgs: Int): Type = Function((0 until nbrArgs).map( x => Bool).toList, Bool)
 }
 case object Implies extends InterpretedFct("⇒", "==>", "$eq$eq$greater", "=>") {
   val typeWithParams = Bool ~> Bool ~> Bool
@@ -198,6 +204,7 @@ case object Eq extends InterpretedFct("=", "==", "⇔", "$eq$eq") {
 case object Plus extends InterpretedFct("+", "$plus") {
   val typeWithParams = Int ~> Int ~> Int
   override val priority = 10
+  override def tpe(nbrArgs: Int): Type = Function((0 until nbrArgs).map( x => Int).toList, Int)
 }
 case object Minus extends InterpretedFct("-", "$minus") {
   val typeWithParams = Int ~> Int ~> Int
@@ -206,6 +213,7 @@ case object Minus extends InterpretedFct("-", "$minus") {
 case object Times extends InterpretedFct("∙", "*", "$times") {
   val typeWithParams = Int ~> Int ~> Int
   override val priority = 15
+  override def tpe(nbrArgs: Int): Type = Function((0 until nbrArgs).map( x => Int).toList, Int)
 }
 case object Divides extends InterpretedFct("/", "$div") {
   val typeWithParams = Int ~> Int ~> Int
