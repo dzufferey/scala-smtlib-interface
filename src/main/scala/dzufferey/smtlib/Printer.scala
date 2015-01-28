@@ -30,7 +30,12 @@ object Printer {
     case Exists(vars, f2) => printQuantifier("exists", vars, f2)
     case ForAll(vars, f2) => printQuantifier("forall", vars, f2)
     case Variable(v) => writer.write(printable(v))
+    case Literal(l: Byte) => if (l >= 0) writer.write(l.toString) else writer.write("(- " + (-l).toString + ")")
+    case Literal(l: Short) => if (l >= 0) writer.write(l.toString) else writer.write("(- " + (-l).toString + ")")
     case Literal(l: Int) => if (l >= 0) writer.write(l.toString) else writer.write("(- " + (-l).toString + ")")
+    case Literal(l: Long) => if (l >= 0) writer.write(l.toString) else writer.write("(- " + (-l).toString + ")")
+    case Literal(l: Float) => if (l >= 0.0) writer.write(l.toString) else writer.write("(- " + (-l).toString + ")")
+    case Literal(l: Double) => if (l >= 0.0) writer.write(l.toString) else writer.write("(- " + (-l).toString + ")")
     case Literal(l) => writer.write(l.toString)
     case app @ Application(fct, args) => 
       val params = FormulaUtils.typeParams(app)
