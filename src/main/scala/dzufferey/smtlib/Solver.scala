@@ -15,7 +15,7 @@ case class Failure(reason: String) extends Result
 
 class Solver( th: Theory,
               cmd: String,
-              options: Iterable[String],
+              cmdOptions: Iterable[String], //TODO smt-lib options
               implicitDeclaration: Boolean,
               incremental: Boolean,
               dumpToFile: Option[String]) {
@@ -29,7 +29,7 @@ class Solver( th: Theory,
   // Plumbing //
   //////////////
 
-  protected val solver = java.lang.Runtime.getRuntime.exec(Array(cmd) ++ options, null, null)
+  protected val solver = java.lang.Runtime.getRuntime.exec(Array(cmd) ++ cmdOptions, null, null)
   protected val solverInput = {
     val out = solver.getOutputStream()
     //val out = new org.apache.commons.io.output.TeeOutputStream(solver.getOutputStream(), System.out)
@@ -57,9 +57,9 @@ class Solver( th: Theory,
   // Initialisation //
   ////////////////////
 
-  Logger("smtlib", Debug, "starting: " + (Array(cmd) ++ options).mkString(" "))
-  toSolver("(set-option :print-success false)")
-  toSolver("(set-option :produce-models true)")
+  Logger("smtlib", Debug, "starting: " + (Array(cmd) ++ cmdOptions).mkString(" "))
+  toSolver(SetOption("print-success", false))
+  toSolver(SetOption("produce-models", true))
   toSolver("(set-logic "+th+")")
 
   //default declarations

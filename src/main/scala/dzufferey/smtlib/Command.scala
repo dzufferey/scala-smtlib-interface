@@ -16,3 +16,5 @@ case object Pop extends Command
 
 case object GetModel extends Command
 case class GetValue(terms: List[Formula]) extends Command
+
+case class SetOption(option: String, value: Any) extends Command

@@ -78,6 +78,8 @@ class SolverSuite extends FunSuite {
       case UnSat => true
       case _ => false
     })
+    val solver4 = DReal(QF_NRA, 1.0)
+    assert(!solver4.testB(form2), "sat formula")
   }
 
   test("propositional formula") {

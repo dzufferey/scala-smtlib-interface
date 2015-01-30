@@ -100,6 +100,10 @@ object Printer {
         writer.write(" ")
       }
       writer.write("))")
+
+    case SetOption(opt, value) =>
+      //TODO sanitizing value
+      writer.write("(set-option :" + opt + " " + value + ")")
   }
 
 }
