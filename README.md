@@ -45,5 +45,6 @@ However, we have a few life-simplifying features like typechecking formulas, aut
 
 ## TODO
 
-We need a better support for overloading (Int vs Real) and variadic functions (and, or, ...).
+* better support for overloading (Int vs Real)
+* better support for variadic functions (and, or, ...) from the typing perspective
 Right now, the library will complain when it see some Real and variadic functions (it should work though).

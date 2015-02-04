@@ -55,7 +55,7 @@ object FormulaUtils {
 
 
   def getConjuncts(f: Formula): List[Formula] = f match {
-    case And(lst) => lst.flatMap(getConjuncts)
+    case And(lst @ _*) => lst.flatMap(getConjuncts).toList
     case other => List(other)
   }
 
