@@ -170,17 +170,17 @@ case object Not extends InterpretedFct("¬", "~", "!", "unary_!", "unary_$bang")
   override val priority = 8
 }
 
-case object And extends InterpretedFct("∧", "&&", "$amp$amp", "and") {
+case object And extends InterpretedFct("∧", "&&", "$amp$amp", "and", "And") {
   val typeWithParams = Bool ~> Bool ~> Bool
   override val priority = 5
   override def tpe(nbrArgs: Int): Type = Function((0 until nbrArgs).map( x => Bool).toList, Bool)
 }
-case object Or extends InterpretedFct("∨", "||", "$bar$bar", "or") {
+case object Or extends InterpretedFct("∨", "||", "$bar$bar", "or", "Or") {
   val typeWithParams = Bool ~> Bool ~> Bool
   override val priority = 4
   override def tpe(nbrArgs: Int): Type = Function((0 until nbrArgs).map( x => Bool).toList, Bool)
 }
-case object Implies extends InterpretedFct("⇒", "==>", "$eq$eq$greater", "=>") {
+case object Implies extends InterpretedFct("⇒", "==>", "$eq$eq$greater", "=>", "Implies") {
   val typeWithParams = Bool ~> Bool ~> Bool
   override val priority = 3
 }
