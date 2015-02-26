@@ -52,6 +52,15 @@ object Printer {
       }
   }
 
+  def toString(f: Formula)= {
+    val w1 = new StringWriter
+    val w2 = new BufferedWriter(w1)
+    apply(w2, f)
+    w2.flush
+    w2.close
+    w1.toString
+  }
+
   def apply(implicit writer: BufferedWriter, f: Formula) {
     printFormula(f)
     //writer.newLine

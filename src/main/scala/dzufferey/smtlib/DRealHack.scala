@@ -258,7 +258,6 @@ class DRealHack( th: Theory,
     if (implicitDeclaration) {
       mkDeclarations(f)
     }
-    //TODO define-ode
     toSolver(Assert(f))
   }
 
@@ -277,6 +276,44 @@ class DRealHack( th: Theory,
   def test(conjuncts: List[Formula]): Result = {
     conjuncts.foreach(Checks(_))
     conjuncts.foreach(assert(_))
+    checkSat
+  }
+
+  def declareODE(name: String, formula: Formula) {
+    if (implicitDeclaration) {
+      mkDeclarations(formula)
+      pushOnStack(Set(Variable(name).setType(Real)), declStack, declaredV)
+    }
+    formula match {
+      case Eq(Application(DRealDecl.timeDerivative, List(Variable(lhs))), rhs) =>
+        val cmd = "(define-ode " + name + " ((= d/dt["+lhs+"] " + Printer.toString(rhs) + ")))"
+        toSolver(cmd)
+      case other =>
+        Logger.logAndThrow("smtlib", Error, "not an ODE: " + other)
+    }
+  }
+
+  def pintegrate( minTime: Formula, maxTime: Formula,
+                  preVars: List[Variable], postVars: List[Variable],
+                  holders: List[Variable]) {
+    val mit = Printer.toString(minTime)
+    val mat = Printer.toString(maxTime)
+    val pre = preVars.map(Printer.toString).mkString("["," ","]")
+    val post = postVars.map(Printer.toString).mkString("["," ","]") 
+    val hld = holders.map(Printer.toString).mkString("["," ","]")
+    val cmd = "(assert (= "+post+" (pintegral "+mit+" "+mat+" "+pre+" "+hld+")))"
+    toSolver(cmd)
+  }
+
+  def assertForallT(mode: Int, minTime: Formula, maxTime: Formula, formula: Formula) {
+    val mit = Printer.toString(minTime)
+    val mat = Printer.toString(maxTime)
+    val f = Printer.toString(formula)
+    val cmd = "(assert (forall_t "+mode+" ["+mit+" "+mat+"] "+f+"))"
+    toSolver(cmd)
+  }
+
+  def checkSat: Result = {
     toSolver(CheckSat)
     toSolver(Exit)
     solverInput.close

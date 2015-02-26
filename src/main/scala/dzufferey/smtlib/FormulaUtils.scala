@@ -58,6 +58,11 @@ object FormulaUtils {
     case And(lst @ _*) => lst.flatMap(getConjuncts).toList
     case other => List(other)
   }
+  
+  def getDisjuncts(f: Formula): List[Formula] = f match {
+    case Or(lst @ _*) => lst.flatMap(getDisjuncts).toList
+    case other => List(other)
+  }
 
   def typeParams(app: Application): List[Type] = app.fct match {
     case _: InterpretedFct => //skip those: defined/overloaded in smtlib
@@ -95,6 +100,14 @@ object FormulaUtils {
       case _ => acc
     }
     collect(Set[(Symbol, List[Type])](), process, f)
+  }
+
+  def collectSymbols(f: Formula): Set[Symbol] = {
+    def process(acc: Set[Symbol], f: Formula) = f match {
+      case app @ Application(s, _) => acc + s
+      case _ => acc
+    }
+    collect(Set[Symbol](), process, f)
   }
 
 }
