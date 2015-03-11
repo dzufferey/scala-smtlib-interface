@@ -4,6 +4,7 @@ import dzufferey.utils.Misc
 
 sealed abstract class Def
 sealed abstract class ValDef extends Def
+case class ValD(d: Double) extends ValDef { override def toString = d.toString }
 case class ValI(i: Long) extends ValDef { override def toString = i.toString }
 case class ValB(b: Boolean) extends ValDef { override def toString = b.toString }
 case class ValExt(idx: Int, tpe: Type) extends ValDef { override def toString = tpe+"!"+idx }
@@ -33,6 +34,7 @@ object Def {
             val args = f.defs.head._1.map{
               case ValB(_) => List(ValB(true), ValB(false))
               case ValI(_) => sys.error("cannot complement integers")
+              case ValD(_) => sys.error("cannot complement floating points")
               case ValExt(_, tpe) => domains(tpe).toList
             }
             val allArgs = Misc.cartesianProduct(args)
@@ -222,6 +224,7 @@ object Model {
     def fEval(f: Formula, params: Map[String,ValDef]): ValDef = f match {
       case Literal(b: Boolean) => ValB(b)
       case Literal(l: Long) => ValI(l)
+      case Literal(d: Double) => ValD(d)
       case Variable(id) => params(id)
       case Eq(e1, e2) =>
         val v1 = fEval(e1, params)

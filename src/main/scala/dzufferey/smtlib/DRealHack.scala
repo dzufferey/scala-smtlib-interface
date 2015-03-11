@@ -318,7 +318,18 @@ class DRealHack( th: Theory,
     toSolver(Exit)
     solverInput.close
     val res = fromSolver() match {
-      case "sat" => Sat()
+      case "sat" =>
+        //get the model from stderr
+        val acc = new StringBuilder()
+        while(solverError.ready) {
+          acc.append(solverError.readLine)
+          acc.append("\n")
+        }
+        val model = DRealParser.parse(acc.toString).map( lst => {
+          val lst2 = lst.map{ case (v,l,u) => v -> ValD((l+u) / 2) }.toMap
+          new Model(Map(), lst2, Map())
+        })
+        Sat(model)
       case "unsat" => UnSat
       case "unknown" => Unknown
       case other =>
@@ -380,4 +391,32 @@ object DReal {
 
 }
 
+object DRealParser extends scala.util.parsing.combinator.RegexParsers {
 
+  def nonWhite: Parser[String] = """[^\s,]+""".r ^^ { _.toString }
+
+  def nonEq: Parser[String] = """[^=]+""".r ^^ { _.toString }
+
+  def number: Parser[String] = """-?(\d+(\.\d*)?)([eE][+-]?\d+)?""".r
+
+  def range: Parser[(String, Double, Double)] = (
+    nonWhite ~ (":" ~> nonEq ~> "=" ~> "[" ~> number) ~ ("," ~> number <~ "]") ^^ { case id ~ lb ~ ub => (id, lb.toDouble, ub.toDouble) }
+  | nonWhite <~ ":" <~ nonEq <~ "=" <~ "[ -INFTY ]" ^^ { case id => (id, Double.NegativeInfinity, Double.NegativeInfinity) }
+  | nonWhite <~ ":" <~ nonEq <~ "=" <~ "[ INFTY ]" ^^ { case id => (id, Double.PositiveInfinity, Double.PositiveInfinity) }
+  )
+
+  def ranges = rep(range)
+
+  def whole = "Solution:" ~> ranges
+
+  def parse(str: String): Option[List[(Variable, Double, Double)]] = {
+    val result = parseAll(whole, str)
+    if (result.successful) {
+      val cmds = result.get
+      Some(cmds.map{ case (a,b,c) => (Variable(a).setType(Real), b, c)})
+    } else {
+      None
+    }
+  }
+
+}
