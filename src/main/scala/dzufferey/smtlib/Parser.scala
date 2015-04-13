@@ -8,33 +8,36 @@ import scala.util.parsing.combinator.syntactical._
 import dzufferey.utils._
 import dzufferey.utils.LogLevel._
 
+class Lexer extends StdLexical {
+
+  override def identChar = acceptIf({ c =>
+    c != ':' && c != '(' && c != ')' && !c.isWhitespace && !c.isDigit
+  })(el => "not in ident: " + el)
+
+}
+
 object Parser extends StandardTokenParsers {
 
+  override val lexical = new Lexer
+
   lexical.delimiters += (
-    "(", ")", "!", ".", "@",
-    "=", "<", ">", ">=", "<=", "=>",
-    "+", "-", "*"
+    "(", ")"
   )
   
   lexical.reserved += (
-    "model", "assert",
-    "declare", "define", "sort", "fun", 
-    ":named",
-    "forall", "exists",
+    "model",
+    "assert",
+    "declare-sort",
+    "declare-fun",
+    "define-sort",
+    "define-fun",
+    "forall",
+    "exists",
     "ite",
-    "true", "false"
+    "true",
+    "false"
   )
 
-  def identTail: Parser[String] = (
-    "." ~ (super.ident | numericLit) ~ identTail ^^ { case a ~ b ~ c => a + b + c }
-  | "!" ~ (super.ident | numericLit) ~ identTail ^^ { case a ~ b ~ c => a + b + c }
-  | success("")
-  )
-
-  override def ident: Parser[String] = (
-    opt("@") ~ super.ident ~ identTail  ^^ { case at ~ head ~ tail => at.getOrElse("") + head + tail }
-  )
-    
   def paren[T](parser: Parser[T]): Parser[T] = "(" ~> parser <~ ")"
 
   def model: Parser[List[Command]] = paren("model" ~> rep(cmd))
@@ -42,10 +45,10 @@ object Parser extends StandardTokenParsers {
   def getValueReply: Parser[List[(Formula, Formula)]] = paren(rep(assignement))
 
   def cmd: Parser[Command] = (
-      paren("declare" ~> "-" ~> "sort" ~> ident ~ numericLit)                         ^^ { case id ~ num => DeclareSort(id, num.toInt) }
-    | paren("declare" ~> "-" ~> "fun" ~> ident ~ paren(rep(sort)) ~ sort)             ^^ { case id ~ args ~ ret => DeclareFun(id, Function(args, ret))  }
-    | paren("define" ~> "-" ~> "sort" ~> ident ~ paren(rep(ident)) ~ sort)            ^^ { case id ~ args ~ ret => DefineSort(id, args, ret) }
-    | paren("define" ~> "-" ~> "fun" ~> ident ~ paren(rep(typedVar)) ~ sort ~ term)   ^^ { case id ~ vars ~ tpe ~ body => DefineFun(id, vars, tpe, body) }
+      paren("declare-sort" ~> ident ~ numericLit)                         ^^ { case id ~ num => DeclareSort(id, num.toInt) }
+    | paren("declare-fun" ~> ident ~ paren(rep(sort)) ~ sort)             ^^ { case id ~ args ~ ret => DeclareFun(id, Function(args, ret))  }
+    | paren("define-sort" ~> ident ~ paren(rep(ident)) ~ sort)            ^^ { case id ~ args ~ ret => DefineSort(id, args, ret) }
+    | paren("define-fun" ~> ident ~ paren(rep(typedVar)) ~ sort ~ term)   ^^ { case id ~ vars ~ tpe ~ body => DefineFun(id, vars, tpe, body) }
     | paren("assert" ~> term)                                                         ^^ { f => Assert(f) }
     | term                                                                            ^^ { f => Assert(f) }
   )
@@ -65,7 +68,6 @@ object Parser extends StandardTokenParsers {
     | paren("ite" ~> rep(term))     ^^ { case args => Application(ite, args) }
     | paren(symbol ~ rep(term))     ^^ { case sym ~ args => Application(sym, args) }
     | paren(binder ~ paren(rep(typedVar)) ~ term) ^^ { case b ~ v ~ f => b(v, f) }
-    | paren("!" ~> term ~ (":named" ~> ident)) ^^ { case t ~ id => t } //TODO ??
   )
 
   def sort: Parser[Type] = (
@@ -76,16 +78,7 @@ object Parser extends StandardTokenParsers {
   )
 
   def symbol: Parser[Symbol] = (
-      "="  ^^^ Eq
-    | "<"  ^^^ Lt
-    | ">"  ^^^ Gt
-    | ">=" ^^^ Geq
-    | "<=" ^^^ Leq
-    | "=>" ^^^ Implies
-    | "+"  ^^^ Plus
-    | "-"  ^^^ Minus
-    | "*"  ^^^ Times
-    | ident ^^ { id => InterpretedFct(id).getOrElse(UnInterpretedFct(id)) }
+    ident ^^ { id => InterpretedFct(id).getOrElse(UnInterpretedFct(id)) }
   )
 
   def typedVar: Parser[Variable] = "(" ~> ident ~ sort <~ ")" ^^ { case id ~ srt => Variable(id).setType(srt) }

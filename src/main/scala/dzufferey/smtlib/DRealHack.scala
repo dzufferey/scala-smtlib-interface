@@ -403,6 +403,7 @@ object DRealParser extends scala.util.parsing.combinator.RegexParsers {
     nonWhite ~ (":" ~> nonEq ~> "=" ~> "[" ~> number) ~ ("," ~> number <~ "]") ^^ { case id ~ lb ~ ub => (id, lb.toDouble, ub.toDouble) }
   | nonWhite <~ ":" <~ nonEq <~ "=" <~ "[ -INFTY ]" ^^ { case id => (id, Double.NegativeInfinity, Double.NegativeInfinity) }
   | nonWhite <~ ":" <~ nonEq <~ "=" <~ "[ INFTY ]" ^^ { case id => (id, Double.PositiveInfinity, Double.PositiveInfinity) }
+  | nonWhite <~ ":" <~ nonEq <~ "=" <~ "[ ENTIRE ]" ^^ { case id => (id, Double.NegativeInfinity, Double.PositiveInfinity) }
   )
 
   def ranges = rep(range)
