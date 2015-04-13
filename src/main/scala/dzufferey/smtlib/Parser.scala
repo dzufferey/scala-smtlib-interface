@@ -11,7 +11,7 @@ import dzufferey.utils.LogLevel._
 object Parser extends StandardTokenParsers {
 
   lexical.delimiters += (
-    "(", ")", "!",
+    "(", ")", "!", ".", "@",
     "=", "<", ">", ">=", "<=", "=>",
     "+", "-", "*"
   )
@@ -25,9 +25,14 @@ object Parser extends StandardTokenParsers {
     "true", "false"
   )
 
-  override def ident = (
-      super.ident ~ "!" ~ repsep(super.ident | numericLit, "!") ^^ { case head ~ _ ~ tail => if (tail.isEmpty) head else head + "!" + tail.mkString("!") }
-    | super.ident 
+  def identTail: Parser[String] = (
+    "." ~ (super.ident | numericLit) ~ identTail ^^ { case a ~ b ~ c => a + b + c }
+  | "!" ~ (super.ident | numericLit) ~ identTail ^^ { case a ~ b ~ c => a + b + c }
+  | success("")
+  )
+
+  override def ident: Parser[String] = (
+    opt("@") ~ super.ident ~ identTail  ^^ { case at ~ head ~ tail => at.getOrElse("") + head + tail }
   )
     
   def paren[T](parser: Parser[T]): Parser[T] = "(" ~> parser <~ ")"
@@ -85,7 +90,7 @@ object Parser extends StandardTokenParsers {
 
   def typedVar: Parser[Variable] = "(" ~> ident ~ sort <~ ")" ^^ { case id ~ srt => Variable(id).setType(srt) }
 
-  def removeComments(str: String) = str.replaceAll("[ \t\f]*;;.*\\n", "")
+  def removeComments(str: String) = str.replaceAll("[ \t\f]*;.*\\n", "")
 
   def parseModel(str: String): Option[List[Command]] = {
     val noComments = removeComments(str)

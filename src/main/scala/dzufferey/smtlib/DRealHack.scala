@@ -276,7 +276,7 @@ class DRealHack( th: Theory,
   def test(conjuncts: List[Formula]): Result = {
     conjuncts.foreach(Checks(_))
     conjuncts.foreach(assert(_))
-    checkSat
+    checkSat()
   }
 
   def declareODE(name: String, formula: Formula) {
@@ -313,11 +313,11 @@ class DRealHack( th: Theory,
     toSolver(cmd)
   }
 
-  def checkSat: Result = {
+  def checkSat(timeout: Long = 10000): Result = {
     toSolver(CheckSat)
     toSolver(Exit)
     solverInput.close
-    val res = fromSolver() match {
+    val res = fromSolver(timeout) match {
       case "sat" =>
         //get the model from stderr
         val acc = new StringBuilder()
