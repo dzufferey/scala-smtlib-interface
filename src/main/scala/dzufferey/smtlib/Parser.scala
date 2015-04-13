@@ -73,8 +73,9 @@ object Parser extends StandardTokenParsers {
   def sort: Parser[Type] = (
       ident ^^ { case "Int" => Int
                  case "Bool" => Bool
+                 case "Real" => Real
                  case id => UnInterpreted(id) }
-    | paren(ident ~ rep(sort)) ^^ { case id ~ args => sys.error("TODO FSet, FOption, Product") }
+    | paren(ident ~ rep(sort)) ^^ { case id ~ args => sys.error("TODO parametric types") }
   )
 
   def symbol: Parser[Symbol] = (
