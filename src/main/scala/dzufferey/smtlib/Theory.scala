@@ -70,4 +70,8 @@ object DRealDecl {
     timeDerivative
     //TODO derivative in other variables
   )
+
+  def apply(str: String): Option[UnInterpretedFct] = {
+    fcts.find( f => f.symbol == str )
+  }
 }

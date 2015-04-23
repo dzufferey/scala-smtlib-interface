@@ -164,7 +164,7 @@ sealed abstract class InterpretedFct(val symbol: String, aliases: String*) exten
   override val fix = Fix.Infix
 }
 
-case object Not extends InterpretedFct("¬", "~", "!", "unary_!", "unary_$bang") {
+case object Not extends InterpretedFct("¬", "~", "!", "unary_!", "unary_$bang", "not") {
   val typeWithParams = Bool ~> Bool
   override val fix = Fix.Prefix
   override val priority = 8

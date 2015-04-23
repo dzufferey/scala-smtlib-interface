@@ -60,10 +60,19 @@ object Parser extends StandardTokenParsers {
     | "exists" ^^^ ( (vs: List[Variable], f: Formula) => Exists(vs, f) )
   )
 
+  def tail: Parser[String] = (
+     elem("tail", elt => elt.isInstanceOf[lexical.Identifier] && elt.chars.startsWith(".") ) ^^ (_.chars)
+  )
+
+  def number: Parser[Formula] = (
+      numericLit ~ tail             ^^ { case h ~ t => Literal((h + t).toDouble) }
+    | numericLit                    ^^ { str => Literal(str.toLong) }
+  )
+
   def term: Parser[Formula] = (
       "true"                        ^^^ True()
     | "false"                       ^^^ False()
-    | numericLit                    ^^ { str => Literal(str.toLong) }
+    | number
     | ident                         ^^ { id  => Variable(id) }
     | paren("ite" ~> rep(term))     ^^ { case args => Application(ite, args) }
     | paren(symbol ~ rep(term))     ^^ { case sym ~ args => Application(sym, args) }
@@ -79,12 +88,25 @@ object Parser extends StandardTokenParsers {
   )
 
   def symbol: Parser[Symbol] = (
-    ident ^^ { id => InterpretedFct(id).getOrElse(UnInterpretedFct(id)) }
+    ident ^^ { id => InterpretedFct(id).orElse(DRealDecl(id)).getOrElse(UnInterpretedFct(id)) }
   )
 
   def typedVar: Parser[Variable] = "(" ~> ident ~ sort <~ ")" ^^ { case id ~ srt => Variable(id).setType(srt) }
 
   def removeComments(str: String) = str.replaceAll("[ \t\f]*;.*\\n", "")
+
+  def parseTerm(str: String): Option[Formula] = {
+    val tokens = new lexical.Scanner(str)
+    val result = phrase(term)(tokens)
+    if (result.successful) {
+      val t = result.get
+      Logger("smtlib.Parser", Debug, "smt term parsed:\n  " + t)
+      Some(t)
+    } else {
+      Logger("smtlib.Parser", Warning, "parsing error: " + result.toString)
+      None
+    }
+  }
 
   def parseModel(str: String): Option[List[Command]] = {
     val noComments = removeComments(str)
