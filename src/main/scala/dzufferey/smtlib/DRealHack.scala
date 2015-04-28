@@ -318,7 +318,7 @@ class DRealHack( th: Theory,
     toSolver(Exit)
     solverInput.close
     val res = fromSolver(timeout) match {
-      case "sat" =>
+      case s if s == "sat" || s.startsWith("delta-sat") =>
         //get the model from stderr
         val acc = new StringBuilder()
         while(solverError.ready) {
