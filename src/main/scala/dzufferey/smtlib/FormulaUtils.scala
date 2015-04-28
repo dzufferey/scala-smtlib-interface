@@ -110,4 +110,57 @@ object FormulaUtils {
     collect(Set[Symbol](), process, f)
   }
 
+  def nnf(f: Formula, neg: Boolean = false): Formula = f match {
+    case Binding(ForAll, vs, f2) =>
+      val bt = if (neg) Exists else ForAll
+      Binding(bt, vs, nnf(f2, neg))
+    case Binding(Exists, vs, f2) =>
+      val bt = if (neg) ForAll else Exists
+      Binding(bt, vs, nnf(f2, neg))
+    case Application(Not, List(f2)) =>
+      nnf(f2, !neg)
+    case Application(And, args) =>
+      val fct = if (neg) Or else And
+      val args2 = args.map(nnf(_, neg))
+      fct(args2:_*)
+    case Application(Or, args) =>
+      val fct = if (neg) And else Or
+      val args2 = args.map(nnf(_, neg))
+      fct(args2:_*)
+    case other =>
+      assert(other.tpe == Bool)
+      if (neg) Not(other) else other
+  }
+
+  def normalize(f: Formula) = map(normalizef, f)
+  private def normalizef(f: Formula): Formula = f match {
+    case Implies(a,b) => Or(Not(a), b)
+    case Geq(a,b) => Not(Lt(a,b))
+    case Leq(a,b) => Not(Lt(b,a))
+    case Gt(a,b) =>  Lt(b,a)
+    case other => other
+  }
+
+  def simplifyBool(f: Formula): Formula = {
+    def fct(f: Formula) = f match {
+      case Or(lst @ _*) =>
+        val lst2 = lst.toSet.filterNot(_ == False())
+        if (lst2.exists(_ == True())) True()
+        else if (lst2.isEmpty) False()
+        else if (lst2.size == 1) lst2.head
+        else Or(lst2.toList:_*)
+      case And(lst @ _*) =>
+        val lst2 = lst.toSet.filterNot(_ == True())
+        if (lst2.exists(_ == False())) False()
+        else if (lst2.isEmpty) True()
+        else if (lst2.size == 1) lst2.head
+        else And(lst2.toList:_*)
+      case Not(Literal(b: Boolean)) =>
+        Literal(!b)
+      case other =>
+        other
+    }
+    map(fct, f)
+  }
+
 }
