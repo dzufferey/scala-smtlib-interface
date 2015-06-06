@@ -399,11 +399,21 @@ object DRealParser extends scala.util.parsing.combinator.RegexParsers {
 
   def number: Parser[String] = """-?(\d+(\.\d*)?)([eE][+-]?\d+)?""".r
 
-  def range: Parser[(String, Double, Double)] = (
-    nonWhite ~ (":" ~> nonEq ~> "=" ~> "[" ~> number) ~ ("," ~> number <~ "]") ^^ { case id ~ lb ~ ub => (id, lb.toDouble, ub.toDouble) }
-  | nonWhite <~ ":" <~ nonEq <~ "=" <~ "[ -INFTY ]" ^^ { case id => (id, Double.NegativeInfinity, Double.NegativeInfinity) }
-  | nonWhite <~ ":" <~ nonEq <~ "=" <~ "[ INFTY ]" ^^ { case id => (id, Double.PositiveInfinity, Double.PositiveInfinity) }
-  | nonWhite <~ ":" <~ nonEq <~ "=" <~ "[ ENTIRE ]" ^^ { case id => (id, Double.NegativeInfinity, Double.PositiveInfinity) }
+  def num: Parser[Double] = (
+    number ^^ ( _.toDouble )
+  | "-INFTY" ^^^ Double.NegativeInfinity
+  | "INFTY" ^^^ Double.PositiveInfinity
+  | "-inf" ^^^ Double.NegativeInfinity
+  | "inf" ^^^ Double.PositiveInfinity
+  )
+
+  def variable: Parser[Variable] = nonWhite ^^ ( id => Variable(id).setType(Real) )
+
+  def range: Parser[(Variable, Double, Double)] = (
+    variable ~ (":" ~> nonEq ~> "=" ~> "[" ~> num) ~ ("," ~> num <~ "]") ^^ { case id ~ lb ~ ub => (id, lb, ub) }
+  | variable <~ ":" <~ nonEq <~ "=" <~ "[ -INFTY ]" ^^ { case id => (id, Double.NegativeInfinity, Double.NegativeInfinity) }
+  | variable <~ ":" <~ nonEq <~ "=" <~ "[ INFTY ]" ^^ { case id => (id, Double.PositiveInfinity, Double.PositiveInfinity) }
+  | variable <~ ":" <~ nonEq <~ "=" <~ "[ ENTIRE ]" ^^ { case id => (id, Double.NegativeInfinity, Double.PositiveInfinity) }
   )
 
   def ranges = rep(range)
@@ -414,7 +424,7 @@ object DRealParser extends scala.util.parsing.combinator.RegexParsers {
     val result = parseAll(whole, str)
     if (result.successful) {
       val cmds = result.get
-      Some(cmds.map{ case (a,b,c) => (Variable(a).setType(Real), b, c)})
+      Some(cmds)
     } else {
       None
     }

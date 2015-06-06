@@ -18,7 +18,7 @@ object Names {
     case Plus => "+"
     case Minus => "-"
     case Times => "*"
-    case Divides => "/"
+    case Divides => "/" //TODO integer vs real division
     case UnInterpretedFct(f, _, _) => f
   }
 

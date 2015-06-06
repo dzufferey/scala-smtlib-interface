@@ -69,7 +69,7 @@ tail.q_k : [-inf, 1] = [-1, 1]
     val x = Variable("x").setType(Real)
     val form1 = Eq(x, DRealDecl.cos(x))
     val form2 = And(Eq(x, Literal(2.0)), Eq(x, Literal(1.0)))
-    val solver3 = DReal.incremental(QF_NRA)
+    val solver3 = new DRealHackI(QF_NRA, "dReal", Array("--model"), None, true, false, None)
     solver3.push
     solver3.assert(form1)
     assert( solver3.checkSat match {

@@ -358,7 +358,7 @@ class Solver( th: Theory,
 /** Shorthands to create solvers, uses z3 by default. */
 object Solver {
   
-  //for asyn IO
+  //for async IO
   val executor = java.util.concurrent.Executors.newCachedThreadPool()
 
   def setCmd(cmd: Array[String]) = {

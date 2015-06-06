@@ -75,7 +75,9 @@ object Parser extends StandardTokenParsers {
     | number
     | ident                         ^^ { id  => Variable(id) }
     | paren("ite" ~> rep(term))     ^^ { case args => Application(ite, args) }
-    | paren(symbol ~ rep(term))     ^^ { case sym ~ args => Application(sym, args) }
+    | paren(symbol ~ rep(term))     ^^ { case Minus ~ List(Literal(l: Long)) => Literal(-l)
+                                         case Minus ~ List(Literal(d: Double)) => Literal(-d)
+                                         case sym ~ args => Application(sym, args) }
     | paren(binder ~ paren(rep(typedVar)) ~ term) ^^ { case b ~ v ~ f => b(v, f) }
   )
 
