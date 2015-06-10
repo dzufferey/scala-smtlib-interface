@@ -355,7 +355,7 @@ class DRealHack( th: Theory,
 object DReal {
   
   val solver = "dReal"
-  val solverArg = Array[String]()
+  val solverArg = Array[String]("--in")
   
   def apply(th: Theory, precision: Double) = {
     assert(th == QF_NRA || th == QF_NRA_ODE)
