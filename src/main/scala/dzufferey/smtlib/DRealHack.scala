@@ -49,9 +49,6 @@ class DRealHack( th: Theory,
 
   protected var stackCounter = 0
 
-  SysCmd.acquire
-  protected var released = false
-
   //////////////
   // Plumbing //
   //////////////
@@ -106,11 +103,6 @@ class DRealHack( th: Theory,
     } catch {
       case _: java.lang.IllegalThreadStateException =>
         solver.destroy
-    } finally {
-      if (!released) {
-        SysCmd.release
-        released = true
-      }
     }
   }
 
@@ -176,18 +168,11 @@ class DRealHack( th: Theory,
   }
 
   def forceExit {
-    try {
-      solver.destroy 
-      solverInput.close
-      solverOutput.close
-      solverError.close
-      for (f <- fileDump) f.close
-    } finally {
-      if (!released) {
-        SysCmd.release
-        released = true
-      }
-    }
+    solver.destroy 
+    solverInput.close
+    solverOutput.close
+    solverError.close
+    for (f <- fileDump) f.close
   }
 
   def declare(t: Type) = {
@@ -336,17 +321,10 @@ class DRealHack( th: Theory,
         Logger("smtlib", Warning, "checkSat: solver said " + other)
         Failure(other)
     }
-    try {
-      solver.waitFor
-      solverOutput.close
-      solverError.close
-      for (f <- fileDump) f.close
-    } finally {
-      if (!released) {
-        SysCmd.release
-        released = true
-      }
-    }
+    solver.waitFor
+    solverOutput.close
+    solverError.close
+    for (f <- fileDump) f.close
     res
   }
 
