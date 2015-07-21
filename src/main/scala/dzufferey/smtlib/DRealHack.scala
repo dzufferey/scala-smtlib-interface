@@ -298,23 +298,31 @@ class DRealHack( th: Theory,
     toSolver(cmd)
   }
 
+  protected def tryParseModel(mdl: String) = {
+    DRealParser.parse(mdl).map( lst => {
+      val lst2 = lst.map{ case (v,l,u) => v -> ValD((l+u) / 2) }.toMap
+      new Model(Map(), lst2, Map())
+    })
+  }
+
   def checkSat(timeout: Long = 10000): Result = {
     toSolver(CheckSat)
     toSolver(Exit)
     solverInput.close
     val res = fromSolver(timeout) match {
-      case s if s == "sat" || s.startsWith("delta-sat") =>
+      case s if s.startsWith("Solution:") =>
+        //TODO remove the last line
+        val endIdx = s.indexOf("delta-sat with delta = ")
+        val mdl = if (endIdx > 0) s.substring(0, endIdx) else s
+        Sat(tryParseModel(mdl))
+      case s if s == "sat" || s.startsWith("delta-sat with delta = ") =>
         //get the model from stderr
         val acc = new StringBuilder()
         while(solverError.ready) {
           acc.append(solverError.readLine)
           acc.append("\n")
         }
-        val model = DRealParser.parse(acc.toString).map( lst => {
-          val lst2 = lst.map{ case (v,l,u) => v -> ValD((l+u) / 2) }.toMap
-          new Model(Map(), lst2, Map())
-        })
-        Sat(model)
+        Sat(tryParseModel(acc.toString))
       case "unsat" => UnSat
       case "unknown" => Unknown
       case other =>
