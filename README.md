@@ -45,5 +45,8 @@ However, we have a few life-simplifying features like typechecking formulas, aut
 
 ## TODO
 
-* better support for overloading (Int vs Real)
-Right now, the library complains when it see some Real (it should work though).
+* Better support for overloading (Int vs Real)
+  Right now, the library complains when it see some Real (it should work though).
+
+* An (optional) internalizer (using WeakHashMaps) to reduce the memory consumption of large formula
+

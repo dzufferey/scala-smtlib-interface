@@ -245,7 +245,9 @@ object Model {
       case Literal(b: Boolean) => ValB(b)
       case Literal(l: Long) => ValI(l)
       case Literal(d: Double) => ValD(d)
-      case Variable(id) => params(id)
+      case Variable(id) => 
+        if (values contains id) values(id)
+        else params(id)
       case Eq(e1, e2) =>
         val v1 = fEval(e1, params)
         val v2 = fEval(e2, params)
