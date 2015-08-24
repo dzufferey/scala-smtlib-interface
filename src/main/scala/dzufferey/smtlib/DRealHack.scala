@@ -13,7 +13,8 @@ class DRealHackI(th: Theory,
                  precision: Option[Double],
                  implicitDeclaration: Boolean,
                  incremental: Boolean,
-                 dumpToFile: Option[String]) {
+                 dumpToFile: Option[String],
+                 ioWait: Int) {
 
 
   protected val stack = Stack[List[Formula]]()
@@ -33,7 +34,7 @@ class DRealHackI(th: Theory,
   }
 
   def checkSat: Result = {
-    val solver = new DRealHack(th, cmd, options, precision, implicitDeclaration, incremental, dumpToFile)
+    val solver = new DRealHack(th, cmd, options, precision, implicitDeclaration, incremental, dumpToFile, ioWait)
     solver.test(current ++ stack.toList.flatten)
   }
 }
@@ -45,7 +46,8 @@ class DRealHack( th: Theory,
                  precision: Option[Double],
                  implicitDeclaration: Boolean,
                  incremental: Boolean,
-                 dumpToFile: Option[String]) {
+                 dumpToFile: Option[String],
+                 ioWait: Int) {
 
   protected var stackCounter = 0
 
@@ -141,6 +143,9 @@ class DRealHack( th: Theory,
             Logger("smtlib", Debug, "< " + line)
             acc.append(line)
             acc.append("\n")
+            if (!stream.ready && ioWait > 0) {
+              Thread.sleep(ioWait)
+            }
           } while(stream.ready)
           acc.toString.trim
         }
@@ -345,34 +350,34 @@ object DReal {
   
   def apply(th: Theory, precision: Double) = {
     assert(th == QF_NRA || th == QF_NRA_ODE)
-    new DRealHack(th, solver, solverArg, Some(precision), true, false, None)
+    new DRealHack(th, solver, solverArg, Some(precision), true, false, None, 1)
   }
   
   def apply(th: Theory, precision: Double, file: String) = {
     assert(th == QF_NRA || th == QF_NRA_ODE)
-    new DRealHack(th, solver, solverArg, Some(precision), true, false, Some(file))
+    new DRealHack(th, solver, solverArg, Some(precision), true, false, Some(file), 1)
   }
 
 
   def apply(th: Theory) = {
     assert(th == QF_NRA || th == QF_NRA_ODE)
-    new DRealHack(th, solver, solverArg, None, true, false, None)
+    new DRealHack(th, solver, solverArg, None, true, false, None, 1)
   }
   
   def apply(th: Theory, file: String) = {
     assert(th == QF_NRA || th == QF_NRA_ODE)
-    new DRealHack(th, solver, solverArg, None, true, false, Some(file))
+    new DRealHack(th, solver, solverArg, None, true, false, Some(file), 1)
   }
 
 
   def incremental(th: Theory) = {
     assert(th == QF_NRA || th == QF_NRA_ODE)
-    new DRealHackI(th, solver, solverArg, None, true, false, None)
+    new DRealHackI(th, solver, solverArg, None, true, false, None, 1)
   }
   
   def incremental(th: Theory, file: String) = {
     assert(th == QF_NRA || th == QF_NRA_ODE)
-    new DRealHackI(th, solver, solverArg, None, true, false, Some(file))
+    new DRealHackI(th, solver, solverArg, None, true, false, Some(file), 1)
   }
 
 }

@@ -69,13 +69,23 @@ tail.q_k : [-inf, 1] = [-1, 1]
     val x = Variable("x").setType(Real)
     val form1 = Eq(x, DRealDecl.cos(x))
     val form2 = And(Eq(x, Literal(2.0)), Eq(x, Literal(1.0)))
-    val solver3 = new DRealHackI(QF_NRA, "dReal", Array("--in", "--model"), None, true, false, None)
+    val solver3 = new DRealHackI(QF_NRA, "dReal", Array("--in", "--model"), None, true, false, None, 1)
     solver3.push
     solver3.assert(form1)
-    assert( solver3.checkSat match {
-      case Sat(model) => model.isDefined
-      case _ => false
-    })
+    solver3.checkSat match {
+      case Sat(model) =>
+        assert(model.isDefined)
+        val m = model.get 
+        m(x) match {
+          case ValD(v) => assert((v - math.cos(v)).abs < 0.1)
+          case _ => assert(false)
+        }
+      case _ => 
+        assert(false)
+    }
+    solver3.pop
+    solver3.assert(form2)
+    assert(solver3.checkSat == UnSat)
   }
 
 }
