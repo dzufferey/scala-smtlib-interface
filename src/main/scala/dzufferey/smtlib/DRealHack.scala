@@ -384,9 +384,9 @@ object DReal {
 
 object DRealParser extends scala.util.parsing.combinator.RegexParsers {
 
-  def nonWhite: Parser[String] = """[^\s,]+""".r ^^ { _.toString }
+  def nonWhite: Parser[String] = """[^\s,]+""".r
 
-  def nonEq: Parser[String] = """[^=]+""".r ^^ { _.toString }
+  def nonEq: Parser[String] = """[^=]+""".r
 
   def number: Parser[String] = """-?(\d+(\.\d*)?)([eE][+-]?\d+)?""".r
 

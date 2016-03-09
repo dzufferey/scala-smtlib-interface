@@ -102,7 +102,10 @@ sealed abstract class Symbol {
 
   def tpe: Type = instanciateType(typeParams.map( t => Type.freshTypeVar))
   
-  def tpe(nbrArgs: Int): Type = tpe //this can be overridden variable arity symbols
+  def tpe(nbrArgs: Int): Type = { // linter:ignore UnusedParameter
+    //this can be overridden variable arity symbols
+    tpe
+  }
 
   val fix = Fix.Prefix
   val priority = 10

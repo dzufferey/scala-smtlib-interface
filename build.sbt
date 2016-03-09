@@ -4,13 +4,15 @@ organization := "io.github.dzufferey"
 
 version := "0.1-SNAPSHOT"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
-  "org.scalatest" %% "scalatest" % "2.2.4" % "test",
+  "org.scalatest" %% "scalatest" % "2.2.6" % "test",
   "io.github.dzufferey" %% "misc-scala-utils" % "0.1-SNAPSHOT"
 )
+
+addCompilerPlugin("org.psywerx.hairyfotr" %% "linter" % "0.1.13")
 
 resolvers +=  "dzufferey maven repo" at "https://github.com/dzufferey/my_mvn_repo/raw/master/repository"
 
