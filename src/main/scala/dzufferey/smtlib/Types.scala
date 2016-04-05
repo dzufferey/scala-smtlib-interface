@@ -103,3 +103,8 @@ case class TypeVariable(name: String) extends Type {
   def alpha(subst: Map[TypeVariable, Type]) = subst.getOrElse(this, this)
 }
 
+case object IArray extends Type {
+  override def toString = "(Array Int Int)"
+  def freeParameters = Set[TypeVariable]()
+  def alpha(subst: Map[TypeVariable, Type]) = this
+}
