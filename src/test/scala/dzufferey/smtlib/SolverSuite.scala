@@ -41,6 +41,9 @@ class SolverSuite extends FunSuite {
   val rqp1 = Application(r, List(Application(q, List(p1))))
   val rqp3 = Application(r, List(Application(q, List(p3))))
 
+  // array w/ integer indices and integer values
+  val arr = Variable("arr").setType(IArray)
+
   test("checking z3") {
     val form1 = And(a, Or(Not(a), b))
     val form2 = And(a, Not(a))
@@ -146,6 +149,18 @@ class SolverSuite extends FunSuite {
     val solver = Solver(UFLIA)
     assert( solver.testB(form1), "sat formula")
     assert(!solver.testB(form2), "unsat formula")
+  }
+
+  test("auflia") {
+    val ax = ForAll(List(p1), Eq(qp1,p2))
+    val form1 = And(ax, Eq(rqp1, rp2))
+    val form2 = And(ax, Lt(rp2,rqp3))
+    val arrClause = Select(Store(arr, IntLit(0), IntLit(10)), IntLit(0))
+    val form3 = Eq(arrClause, IntLit(10))
+    val solver = Solver(AUFLIA)
+    assert(solver.test(List(form1, form3)) match {case Sat(_) => true; case _ => false}, "sat formula")
+    assert(solver.test(List(form2, form3)) match {case UnSat => true; case _ => false}, "unsat formula")
+    assert(solver.testB(form3), "sat formula")
   }
   
   test("overloading") {

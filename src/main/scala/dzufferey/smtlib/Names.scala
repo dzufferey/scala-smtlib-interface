@@ -19,6 +19,8 @@ object Names {
     case Minus => "-"
     case Times => "*"
     case Divides => "/" //TODO integer vs real division
+    case Select => "select"
+    case Store => "store"
     case UnInterpretedFct(f, _, _) => f
   }
 
@@ -31,6 +33,7 @@ object Names {
     case Bool => "Bool"
     case Int => "Int"
     case Real => "Real"
+    case IArray => "(Array Int Int)"
     case UnInterpreted(id) => id
     case Wildcard => Logger.logAndThrow("smtlib", Error, "Wildcard types should have been instanciated!")
     case other => Logger.logAndThrow("smtlib", Error, "not supported: " + other)

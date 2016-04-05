@@ -231,6 +231,17 @@ case object Gt extends InterpretedFct(">", "$greater") {
   override val priority = 9
 }
 
+// Array functions
+case object Store extends InterpretedFct("store", "$store") {
+  val typeWithParams = IArray ~> Int ~> Int ~> IArray
+  override val priority = 20
+}
+
+case object Select extends InterpretedFct("select", "$select") {
+  val typeWithParams = IArray ~> Int ~> Int
+  override val priority = 20
+}
+
 
 object InterpretedFct {
   private var symbols: List[InterpretedFct] = Nil
