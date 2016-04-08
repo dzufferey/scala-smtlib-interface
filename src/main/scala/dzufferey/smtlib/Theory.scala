@@ -26,6 +26,11 @@ case object UFLIA extends Theory {
   override def declaredFunctions: Set[Symbol] = super.declaredFunctions ++ Set(Plus, Minus, Times, Divides, Leq, Lt, Geq, Gt)
 }
 
+case object AUFLIA extends Theory {
+  override def declaredSorts: Set[Type] = super.declaredSorts + Int + IArray
+  override def declaredFunctions: Set[Symbol] = super.declaredFunctions ++ Set(Plus, Minus, Times, Divides, Leq, Lt, Geq, Gt, Select, Store)
+}
+
 /** for dreal */
 case object QF_NRA extends Theory {
   override def declaredSorts: Set[Type] = super.declaredSorts + Real

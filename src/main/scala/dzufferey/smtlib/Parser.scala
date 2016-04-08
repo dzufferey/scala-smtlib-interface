@@ -86,7 +86,11 @@ object Parser extends StandardTokenParsers {
                  case "Bool" => Bool
                  case "Real" => Real
                  case id => UnInterpreted(id) }
-    | paren(ident ~ rep(sort)) ^^ { case id ~ args => sys.error("TODO parametric types") }
+    | paren(ident ~ rep(sort)) ^^ {
+        // treating Array as parametric type, but only implementing Int Int
+        case "Array" ~ List(Int, Int) => IArray
+        case id ~ args => sys.error("TODO parametric types")
+      }
   )
 
   def symbol: Parser[Symbol] = (
