@@ -18,7 +18,8 @@ object Names {
     case Plus => "+"
     case Minus => "-"
     case Times => "*"
-    case Divides => "/" //TODO integer vs real division
+    //case Divides => "/" //TODO real division
+    case Divides => "div" //this is for integers
     case Select => "select"
     case Store => "store"
     case UnInterpretedFct(f, _, _) => f
@@ -33,17 +34,15 @@ object Names {
     case Bool => "Bool"
     case Int => "Int"
     case Real => "Real"
-    case IArray => "(Array Int Int)"
+    case SArray(t1, t2) => "(Array "+tpe(t1)+" "+tpe(t2)+")"
     case UnInterpreted(id) => id
     case Wildcard => Logger.logAndThrow("smtlib", Error, "Wildcard types should have been instanciated!")
     case other => Logger.logAndThrow("smtlib", Error, "not supported: " + other)
   }
   
   def tpeArity(t: Type): Int = t match {
+    case SArray(_, _) => 2
     case _ => 0
-  //case Bool | Int | Wildcard | UnInterpreted(_) => 0
-  //case FSet(_) | FOption(_) => 1
-  //case other => Logger.logAndThrow("smtlib", Error, "Names.tpeArity, not supported: " + other)
   }
   
   def typeDecl(t: Type) = {

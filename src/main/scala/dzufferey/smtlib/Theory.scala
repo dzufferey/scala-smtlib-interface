@@ -27,7 +27,7 @@ case object UFLIA extends Theory {
 }
 
 case object AUFLIA extends Theory {
-  override def declaredSorts: Set[Type] = super.declaredSorts + Int + IArray
+  override def declaredSorts: Set[Type] = super.declaredSorts + Int + SArray(Int,Int)
   override def declaredFunctions: Set[Symbol] = super.declaredFunctions ++ Set(Plus, Minus, Times, Divides, Leq, Lt, Geq, Gt, Select, Store)
 }
 

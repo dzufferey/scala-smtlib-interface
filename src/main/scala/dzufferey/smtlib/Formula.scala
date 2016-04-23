@@ -118,11 +118,13 @@ sealed abstract class Symbol {
     val app = Application(this, args.toList)
     val ret = Type.freshTypeVar
     //fill the type as much as possible
-    Type.unify(t, Function(args.map(_.tpe).toList, ret)) match {
+    val target = Function(args.map(_.tpe).toList, ret)
+    Type.unify(t, target) match {
       case Some(subst) if subst contains ret =>
-        //println(symbol + args.mkString("(",",",")") + ": " + subst(ret))
+        //println(this + args.mkString("(",",",")") + ": " + subst)
         app.setType(subst(ret))
-      case _ =>
+      case other =>
+        //println(this + args.mkString("(",",",")") + " with "+t+" ⇔ "+target+": " + other)
         t match {
           case Function(_, TypeVariable(_)) => app
           case Function(_, ret) => app.setType(ret)
@@ -233,12 +235,18 @@ case object Gt extends InterpretedFct(">", "$greater") {
 
 // Array functions
 case object Store extends InterpretedFct("store", "$store") {
-  val typeWithParams = IArray ~> Int ~> Int ~> IArray
+  private val i = Type.freshTypeVar
+  private val v = Type.freshTypeVar
+  override val typeParams = List(i,v)
+  val typeWithParams = SArray(i,v) ~> i ~> v ~> SArray(i,v)
   override val priority = 20
 }
 
 case object Select extends InterpretedFct("select", "$select") {
-  val typeWithParams = IArray ~> Int ~> Int
+  private val i = Type.freshTypeVar
+  private val v = Type.freshTypeVar
+  override val typeParams = List(i,v)
+  val typeWithParams = SArray(i,v) ~> i ~> v
   override val priority = 20
 }
 
@@ -277,6 +285,8 @@ object InterpretedFct {
   add( Geq )
   add( Lt )
   add( Gt )
+  add( Store )
+  add( Select )
 }
 
 

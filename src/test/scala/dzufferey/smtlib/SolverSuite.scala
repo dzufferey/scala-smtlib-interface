@@ -42,7 +42,7 @@ class SolverSuite extends FunSuite {
   val rqp3 = Application(r, List(Application(q, List(p3))))
 
   // array w/ integer indices and integer values
-  val arr = Variable("arr").setType(IArray)
+  val arr = Variable("arr").setType(SArray(Int,Int))
 
   test("checking z3") {
     val form1 = And(a, Or(Not(a), b))

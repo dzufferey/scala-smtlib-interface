@@ -88,7 +88,7 @@ object Parser extends StandardTokenParsers {
                  case id => UnInterpreted(id) }
     | paren(ident ~ rep(sort)) ^^ {
         // treating Array as parametric type, but only implementing Int Int
-        case "Array" ~ List(Int, Int) => IArray
+        case "Array" ~ List(s1, s2) => SArray(s1, s2)
         case id ~ args => sys.error("TODO parametric types")
       }
   )

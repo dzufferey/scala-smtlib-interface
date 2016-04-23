@@ -30,6 +30,15 @@ object Type {
     (subst, tpe alpha subst)
   }
 
+  protected def mergeTypeMaps(base: Map[TypeVariable, Type], addition: Map[TypeVariable, Type]): Map[TypeVariable, Type] = {
+    val base2 = base.foldLeft(base)( (acc, kv) => {
+      val (k, v) = kv
+      val v2 = v.alpha(addition)
+      if (v2 != v) acc + (k -> v2) else acc
+    })
+    base2 ++ addition
+  }
+
   def unify(t1: Type, t2: Type): Option[Map[TypeVariable, Type]] = (t1,t2) match {
     case (a,b) if a == b =>
       Some(Map.empty[TypeVariable, Type])
@@ -46,12 +55,18 @@ object Type {
     case (UnInterpreted(i1), UnInterpreted(i2)) if i1 == i2 =>
       Some(Map.empty[TypeVariable, Type])
     case (Function(arg1, r1), Function(arg2, r2)) if arg1.size == arg2.size =>
-      arg1.zip(arg2).foldLeft(Some(Map.empty[TypeVariable, Type]): Option[Map[TypeVariable, Type]])( (acc, p) => {
+      arg1.zip(arg2).foldLeft(unify(r1,r2))( (acc, p) => {
         acc.flatMap( map => {
           val t1 = p._1.alpha(map)
           val t2 = p._2.alpha(map)
-          unify(t1, t2).map(_ ++ map)
+          unify(t1, t2).map( newMap => mergeTypeMaps(map, newMap))
         })
+      })
+    case (SArray(i1, v1), SArray(i2, v2)) =>
+      unify(i1, i2).flatMap( map => {
+        val t1 = v1.alpha(map)
+        val t2 = v2.alpha(map)
+        unify(t1, t2).map( newMap => mergeTypeMaps(map, newMap))
       })
     case _ =>
       Logger("Typer", Warning, "failed to unify: " + t1 + " ⇔ " + t2)
@@ -103,8 +118,9 @@ case class TypeVariable(name: String) extends Type {
   def alpha(subst: Map[TypeVariable, Type]) = subst.getOrElse(this, this)
 }
 
-case object IArray extends Type {
-  override def toString = "(Array Int Int)"
-  def freeParameters = Set[TypeVariable]()
-  def alpha(subst: Map[TypeVariable, Type]) = this
+//SArray for Smtlib Array (avoid shadowing scala Array)
+case class SArray(index: Type, value: Type) extends Type {
+  override def toString = "(Array "+index+" "+value+")"
+  def freeParameters = index.freeParameters ++ value.freeParameters
+  def alpha(subst: Map[TypeVariable, Type]) = SArray(index.alpha(subst), value.alpha(subst))
 }
