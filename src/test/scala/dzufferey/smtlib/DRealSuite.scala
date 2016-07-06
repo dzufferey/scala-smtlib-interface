@@ -88,4 +88,15 @@ tail.q_k : [-inf, 1] = [-1, 1]
     assert(solver3.checkSat == UnSat)
   }
 
+  test("checking real division") {
+    val x = Variable("x").setType(Real)
+    val form1 = Eq(Literal(1.0), Divides(x,x).setType(Real))
+    val solver = new DRealHack(QF_NRA, "dReal", Array("--in"), None, true, false, None, 1)
+    solver.assert(form1)
+    solver.checkSat() match {
+      case Sat(_) => ()
+      case _ =>  assert(false)
+    }
+  }
+
 }

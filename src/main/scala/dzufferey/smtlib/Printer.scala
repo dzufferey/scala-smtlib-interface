@@ -37,6 +37,12 @@ object Printer {
     case Literal(l: Float) => if (l >= 0.0) writer.write(l.toString) else writer.write("(- " + (-l).toString + ")")
     case Literal(l: Double) => if (l >= 0.0) writer.write(l.toString) else writer.write("(- " + (-l).toString + ")")
     case Literal(l) => writer.write(l.toString)
+    case d @ Divides(a, b) if d.tpe == Real =>
+        writer.write("( / ")
+        printFormula(a)
+        writer.write(" ")
+        printFormula(b)
+        writer.write(")")
     case app @ Application(fct, args) => 
       val params = FormulaUtils.typeParams(app)
       if (!args.isEmpty) {
