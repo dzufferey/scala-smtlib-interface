@@ -401,7 +401,8 @@ object DRealParser extends scala.util.parsing.combinator.RegexParsers {
   def variable: Parser[Variable] = nonWhite ^^ ( id => Variable(id).setType(Real) )
 
   def range: Parser[(Variable, Double, Double)] = (
-    variable ~ (":" ~> nonEq ~> "=" ~> "[" ~> num) ~ ("," ~> num <~ "]") ^^ { case id ~ lb ~ ub => (id, lb, ub) }
+    "(" ~> variable ~ ("," ~> num) ~ ("," ~> num <~ ")") ^^ { case id ~ lb ~ ub => (id, lb, ub) }
+  | variable ~ (":" ~> nonEq ~> "=" ~> "[" ~> num) ~ ("," ~> num <~ "]") ^^ { case id ~ lb ~ ub => (id, lb, ub) }
   | variable <~ ":" <~ nonEq <~ "=" <~ "[ -INFTY ]" ^^ { case id => (id, Double.NegativeInfinity, Double.NegativeInfinity) }
   | variable <~ ":" <~ nonEq <~ "=" <~ "[ INFTY ]" ^^ { case id => (id, Double.PositiveInfinity, Double.PositiveInfinity) }
   | variable <~ ":" <~ nonEq <~ "=" <~ "[ ENTIRE ]" ^^ { case id => (id, Double.NegativeInfinity, Double.PositiveInfinity) }
@@ -409,7 +410,7 @@ object DRealParser extends scala.util.parsing.combinator.RegexParsers {
 
   def ranges = rep(range)
 
-  def whole = "Solution:" ~> ranges
+  def whole = ("delta-sat with the following box:" | "Solution:") ~> ranges
 
   def parse(str: String): Option[List[(Variable, Double, Double)]] = {
     val result = parseAll(whole, str)

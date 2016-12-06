@@ -4,7 +4,7 @@ import org.scalatest._
 
 class DRealSuite extends FunSuite {
 
-  val sampleModel1 = """Solution:
+  val sampleModel1 = """delta-sat with the following box:
 beam.dx : [-inf, 1015.625] = [0, 0]
 beam.dy : [-inf, 1015.625] = [0, 0]
 beam.dz : [ ENTIRE ] = [-162.9375, -153.875]
@@ -61,8 +61,8 @@ tail.q_k : [-inf, 1] = [-1, 1]
 
   test("parsing model 1"){
     val model = DRealParser.parse(sampleModel1)
-    assert(model.isDefined)
     //Console.println(model.get.mkString("\n"))
+    assert(model.isDefined)
   }
 
   test("checking dReal model parsing") {

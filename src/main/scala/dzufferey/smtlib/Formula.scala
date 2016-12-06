@@ -145,10 +145,7 @@ case class UnInterpretedFct(symbol: String,
   def stripType = UnInterpretedFct(symbol)
 
   override val typeParams = tParam
-  val typeWithParams = _tpe match { 
-    case Some(t) => t
-    case None => Wildcard
-  }
+  val typeWithParams = _tpe.getOrElse(Wildcard)
 
   override val priority = 20
 

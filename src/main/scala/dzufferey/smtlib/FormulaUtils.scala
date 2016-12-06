@@ -34,7 +34,12 @@ object FormulaUtils {
     override def transform(f: Formula): Formula = f match {
       case b @ Binding(bt, vs, f) =>
         //avoid capture
-        def fct2(f: Formula): Formula = if (vs.contains(f)) f else fct(f)
+        def fct2(f: Formula): Formula = f match {
+          case v @ Variable(_) =>
+            if (vs.contains(v)) f
+            else fct(f)
+          case _ => fct(f)
+        }
         val m2 = new Mapper(fct2)
         fct(Binding(bt, vs, m2.transform(f)).setType(Bool))
       case other =>
