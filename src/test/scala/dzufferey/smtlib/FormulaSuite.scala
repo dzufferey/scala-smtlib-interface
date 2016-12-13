@@ -19,5 +19,14 @@ class FormulaSuite extends FunSuite {
     val solver = Solver(QF_LIA)
     assert( solver.testB(form), "sat formula")
   }
+  
+  test("inline ops") {
+    import InlineOps._
+    val a = Variable("a").setType(Int)
+    val b = Variable("b").setType(Int)
+    val c = Variable("c").setType(Int)
+    assert( (a + b === c) == Eq(Plus(a, b), c))
+    assert( (a * c + b === 0) == Eq(Plus(Times(a, c), b), Literal(0)))
+  }
 
 }
