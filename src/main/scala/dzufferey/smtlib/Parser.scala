@@ -99,7 +99,7 @@ object Parser extends StandardTokenParsers {
 
   def typedVar: Parser[Variable] = "(" ~> ident ~ sort <~ ")" ^^ { case id ~ srt => Variable(id).setType(srt) }
 
-  def removeComments(str: String) = str.replaceAll("[ \t\f]*;.*\\n", "")
+  def removeComments(str: String) = str.replaceAll("[ \t\f]*;.*(\\r\\n|\\r|\\n)", java.lang.System.lineSeparator())
 
   def parseTerm(str: String): Option[Formula] = {
     val tokens = new lexical.Scanner(str)
