@@ -42,4 +42,26 @@ class ParserSuite extends FunSuite {
     assert(printed == expected1)
   }
 
+  test("parsing with annotations 2"){
+    val str = """
+(forall ((r $Ref)) (!
+  true
+  :pattern ((down r))
+))
+"""
+    val parsed = Parser.parseTerm(str)
+    val expected = ForAll(List(Variable("r")), True())
+    assert(parsed == Some(expected))
+    parsed match {
+      case Some(ForAll(_, t @ True())) =>
+        assert(t.attributes.length == 1)
+        val pat = Application(UnInterpretedFct("down"), List(Variable("r")))
+        assert(t.attributes.head == AttrExpr(":pattern", List(pat)))
+      case _ => assert(false)
+    }
+    val printed = Printer.toString(parsed.get)
+    val expected1 = "(forall ((r $Ref)) (! true :pattern ((down r) )))"
+    assert(printed == expected1)
+  }
+
 }

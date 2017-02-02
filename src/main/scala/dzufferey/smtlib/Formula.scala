@@ -50,14 +50,18 @@ case class Literal[T <: AnyVal](value: T) extends Formula {
 
 }
 object True {
-  private val lit = Literal(true).setType(Bool)
-  def unapply(f: Formula): Boolean = f == lit
-  def apply(): Literal[Boolean] = lit
+  def unapply(f: Formula): Boolean = f match {
+    case Literal(true) => true
+    case _ => false
+  }
+  def apply(): Literal[Boolean] = Literal(true).setType(Bool)
 }
 object False {
-  private val lit = Literal(false).setType(Bool)
-  def unapply(f: Formula): Boolean = f == lit
-  def apply(): Literal[Boolean] = lit
+  def unapply(f: Formula): Boolean = f match {
+    case Literal(false) => true
+    case _ => false
+  }
+  def apply(): Literal[Boolean] = Literal(false).setType(Bool)
 }
 object IntLit {
   def unapply(f: Formula): Option[scala.Int] = f match {
