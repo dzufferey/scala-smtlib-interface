@@ -19,8 +19,7 @@ class ParserSuite extends FunSuite {
     assert(model == Some(Gt(Plus(DRealDecl.pow(Variable("x"), Literal(2)), DRealDecl.pow(Variable("y"), Literal(2))), Literal(1.2))))
   }
 
-  test("removing comments"){
-    val sep = java.lang.System.lineSeparator()
+  test("parsing with comments"){
     val str = """
 (forall ((r $Ref)) (;! r@222
   true
@@ -28,9 +27,19 @@ class ParserSuite extends FunSuite {
   ; :qid |name|
 ))
 """
-    val expected = "\n(forall ((r $Ref)) ("+sep+"  true\n"+sep+sep+"))\n"
-    val strWithoutComments = Parser.removeComments(str)
-    assert(strWithoutComments == expected)
+    val parsed = Parser.parseTerm(str)
+    val expected = ForAll(List(Variable("r")), True())
+    assert(parsed == Some(expected))
+  }
+
+  test("parsing with annotations 1"){
+    val str = "(forall ((r $Ref)) (! r@222 :pattern ((down r)) :qid |name|))"
+    val parsed = Parser.parseTerm(str)
+    val expected = ForAll(List(Variable("r")), Variable("r@222"))
+    assert(parsed == Some(expected))
+    val printed = Printer.toString(parsed.get)
+    val expected1 = "(forall ((r $Ref)) (! r@222 :pattern ((down r) ) :qid |name|))"
+    assert(printed == expected1)
   }
 
 }

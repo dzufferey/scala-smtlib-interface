@@ -14,6 +14,14 @@ sealed abstract class Formula {
     this
   }
 
+  var attributes: Seq[Attribute] = Seq()
+
+  def setAttributes(a: Seq[Attribute]): this.type = {
+    attributes = a
+    this
+  }
+
+
   def alpha(map: Map[Variable, Variable]): Formula
 
   val freeVariables: Set[Variable]

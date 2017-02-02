@@ -10,9 +10,21 @@ import dzufferey.utils.LogLevel._
 
 class Lexer extends StdLexical {
 
+  import scala.util.parsing.input.CharArrayReader.EofCh
+
   override def identChar = acceptIf({ c =>
-    c != ':' && c != '(' && c != ')' && !c.isWhitespace && !c.isDigit
+    c != '(' && c != ')' && !c.isWhitespace && !c.isDigit
   })(el => "not in ident: " + el)
+
+  override def whitespace: Parser[Any] = rep[Any](
+      whitespaceChar
+    | ';' ~ rep( chrExcept(EofCh, '\n', '\r') )
+  )
+
+  override def token: Parser[Token] = (
+      '|' ~ rep( chrExcept('\\', '|') ) ~ '|' ^^ { case '|' ~ chars ~ '|' => StringLit("|" + chars.mkString("") + "|") }
+    | super.token
+  )
 
 }
 
@@ -35,7 +47,8 @@ object Parser extends StandardTokenParsers {
     "exists",
     "ite",
     "true",
-    "false"
+    "false",
+    "!"
   )
 
   def paren[T](parser: Parser[T]): Parser[T] = "(" ~> parser <~ ")"
@@ -61,7 +74,7 @@ object Parser extends StandardTokenParsers {
   )
 
   def tail: Parser[String] = (
-     elem("tail", elt => elt.isInstanceOf[lexical.Identifier] && elt.chars.startsWith(".") ) ^^ (_.chars)
+    elem("tail", elt => elt.isInstanceOf[lexical.Identifier] && elt.chars.startsWith(".") ) ^^ (_.chars)
   )
 
   def number: Parser[Formula] = (
@@ -79,6 +92,8 @@ object Parser extends StandardTokenParsers {
                                          case Minus ~ List(Literal(d: Double)) => Literal(-d)
                                          case sym ~ args => Application(sym, args) }
     | paren(binder ~ paren(rep(typedVar)) ~ term) ^^ { case b ~ v ~ f => b(v, f) }
+    | paren("!" ~> term ~ rep1(attribute)) ^^ { case t ~ attrs => t.setAttributes(attrs) }
+    | paren(term)
   )
 
   def sort: Parser[Type] = (
@@ -87,7 +102,6 @@ object Parser extends StandardTokenParsers {
                  case "Real" => Real
                  case id => UnInterpreted(id) }
     | paren(ident ~ rep(sort)) ^^ {
-        // treating Array as parametric type, but only implementing Int Int
         case "Array" ~ List(s1, s2) => SArray(s1, s2)
         case id ~ args => sys.error("TODO parametric types")
       }
@@ -98,6 +112,18 @@ object Parser extends StandardTokenParsers {
   )
 
   def typedVar: Parser[Variable] = "(" ~> ident ~ sort <~ ")" ^^ { case id ~ srt => Variable(id).setType(srt) }
+
+  def keyword: Parser[String] = (
+    elem("tail", elt => elt.isInstanceOf[lexical.Identifier] && elt.chars.startsWith(":") ) ^^ (_.chars)
+  )
+
+  def attributeTail: Parser[Attribute] = (
+     stringLit ^^ { str => AttrSymbol("dummy", str) }
+    | paren( rep(term) ) ^^ { exprs => AttrExpr("dummy", exprs) }
+    | success( AttrKeyword("dummy") )
+  )
+
+  def attribute: Parser[Attribute] = keyword ~ attributeTail ^^ { case k ~ a => a.setKeyword(k) }
 
   def removeComments(str: String) = str.replaceAll("[ \t\f]*;.*(\\r\\n|\\r|\\n)", java.lang.System.lineSeparator())
 
@@ -115,9 +141,7 @@ object Parser extends StandardTokenParsers {
   }
 
   def parseModel(str: String): Option[List[Command]] = {
-    val noComments = removeComments(str)
-    Logger("smtlib.Parser", Debug, "raw smt model:\n" + noComments)
-    val tokens = new lexical.Scanner(noComments)
+    val tokens = new lexical.Scanner(str)
     val result = phrase(model)(tokens)
     if (result.successful) {
       val cmds = result.get

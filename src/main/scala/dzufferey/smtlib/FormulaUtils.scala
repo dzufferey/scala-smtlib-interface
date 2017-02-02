@@ -21,11 +21,11 @@ object FormulaUtils {
       case v @ Variable(_) => v
       case f @ Application(fct, args) =>
         val args2 = args map transform
-        Application(fct, args2).setType(f.tpe)
+        Application(fct, args2).setType(f.tpe).setAttributes(f.attributes)
       case b @ Binding(bt, vs, f) =>
         val vs2 = vs map transform map (_.asInstanceOf[Variable]) //this is bad but ...
         val f2 = transform(f)
-        Binding(bt, vs2, f2).setType(Bool)
+        Binding(bt, vs2, f2).setType(Bool).setAttributes(b.attributes)
     }
 
   }
@@ -41,7 +41,7 @@ object FormulaUtils {
           case _ => fct(f)
         }
         val m2 = new Mapper(fct2)
-        fct(Binding(bt, vs, m2.transform(f)).setType(Bool))
+        fct(Binding(bt, vs, m2.transform(f)).setType(Bool).setAttributes(b.attributes))
       case other =>
         fct(super.transform(f))
     }

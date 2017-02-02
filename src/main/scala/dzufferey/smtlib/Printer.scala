@@ -18,6 +18,26 @@ object Printer {
     "(" + printable(v.name) + " " + tpe(v.tpe) + ")"
   }
   
+  protected def printAttribute(a: Attribute)(implicit writer: BufferedWriter) {
+    writer.write(a.keyword)
+    a match {
+      case AttrKeyword(_) =>
+        ()
+      case AttrSymbol(_, s) =>
+        writer.write(" ")
+        writer.write(s)
+      case AttrExpr(_, exprs) =>
+        writer.write(" ")
+        writer.write("(")
+        exprs.foreach( e => {
+          printFormula1(e)
+          writer.write(" ")
+        })
+        writer.write(")")
+    }
+  }
+
+
   protected def printQuantifier(q: String, vars: Iterable[Variable], f: Formula)(implicit writer: BufferedWriter) {
     writer.write("(")
     writer.write(q)
@@ -26,7 +46,21 @@ object Printer {
     writer.write(")")
   }
 
-  protected def printFormula(f: Formula)(implicit writer: BufferedWriter): Unit = f match {
+  protected def printFormula(f: Formula)(implicit writer: BufferedWriter): Unit = {
+    if (f.attributes.nonEmpty) {
+      writer.write("(! ")
+      printFormula1(f)
+      f.attributes.foreach( a => {
+        writer.write(" ")
+        printAttribute(a)
+      })
+      writer.write(")")
+    } else {
+      printFormula1(f)
+    }
+  }
+
+  protected def printFormula1(f: Formula)(implicit writer: BufferedWriter): Unit = f match {
     case Exists(vars, f2) => printQuantifier("exists", vars, f2)
     case ForAll(vars, f2) => printQuantifier("forall", vars, f2)
     case Variable(v) => writer.write(printable(v))
