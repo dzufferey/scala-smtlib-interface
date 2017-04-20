@@ -22,7 +22,7 @@ class Lexer extends StdLexical {
   )
 
   override def token: Parser[Token] = (
-      '|' ~ rep( chrExcept('\\', '|') ) ~ '|' ^^ { case '|' ~ chars ~ '|' => StringLit("|" + chars.mkString("") + "|") }
+      '|' ~ rep( chrExcept('\\', '|') ) ~ '|' ^^ { case _ ~ chars ~ _ => StringLit("|" + chars.mkString("") + "|") }
     | super.token
   )
 
