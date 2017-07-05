@@ -42,7 +42,7 @@ If you want to use it locally do not add the `resolvers` line but instead run `s
 * The [Scala SMT-LIB](https://github.com/regb/scala-smtlib) project is doing pretty much the same thing.
   It is more mature than this project and has support for more SMT-LIB commands/responses.
   However, we have a few life-simplifying features like typechecking formulas, automatically adding symbol declarations, (trying to) reconstruct models, timeouts, ...
-* [MQ-Scala-SMTLIB](https://bitbucket.org/franck44/mq-scala-smtlib) is a similar project that started from Scala SMT-LIB and then evolved into a new library.
+* [ScalaSMT](https://bitbucket.org/franck44/scalasmt) is a similar project that started from Scala SMT-LIB and then evolved into a new library.
 
 
 ## ToDo
