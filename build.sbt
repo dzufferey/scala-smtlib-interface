@@ -4,13 +4,13 @@ organization := "io.github.dzufferey"
 
 version := "0.1-SNAPSHOT"
 
-scalaVersion := "2.12.2"
+scalaVersion := "2.12.6"
 
-crossScalaVersions := Seq("2.11.11", "2.12.2")
+crossScalaVersions := Seq("2.11.11", "2.12.6")
 
 libraryDependencies ++= Seq(
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.5",
-  "org.scalatest" %% "scalatest" % "3.0.1" % "test",
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.0",
+  "org.scalatest" %% "scalatest" % "3.0.5" % "test",
   "io.github.dzufferey" %% "misc-scala-utils" % "0.1-SNAPSHOT"
 )
 
