@@ -345,7 +345,7 @@ class DRealHack( th: Theory,
 
 object DReal {
   
-  val solver = "dReal"
+  val solver = "dreal"
   val solverArg = Array[String]("--in")
   
   def apply(th: Theory, precision: Double) = {

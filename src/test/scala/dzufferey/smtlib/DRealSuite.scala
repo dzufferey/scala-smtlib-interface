@@ -69,7 +69,7 @@ tail.q_k : [-inf, 1] = [-1, 1]
     val x = Variable("x").setType(Real)
     val form1 = Eq(x, DRealDecl.cos(x))
     val form2 = And(Eq(x, Literal(2.0)), Eq(x, Literal(1.0)))
-    val solver3 = new DRealHackI(QF_NRA, "dReal", Array("--in", "--model"), None, true, false, None, 1)
+    val solver3 = new DRealHackI(QF_NRA, "dreal", Array("--in", "--model"), None, true, false, None, 1)
     solver3.push
     solver3.assert(form1)
     solver3.checkSat match {
@@ -91,7 +91,7 @@ tail.q_k : [-inf, 1] = [-1, 1]
   test("checking real division") {
     val x = Variable("x").setType(Real)
     val form1 = Eq(Literal(1.0), Divides(x,x).setType(Real))
-    val solver = new DRealHack(QF_NRA, "dReal", Array("--in"), None, true, false, None, 1)
+    val solver = new DRealHack(QF_NRA, "dreal", Array("--in"), None, true, false, None, 1)
     solver.assert(form1)
     solver.checkSat() match {
       case Sat(_) => ()
