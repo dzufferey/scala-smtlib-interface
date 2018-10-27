@@ -357,7 +357,7 @@ object Solver {
   def apply(th: Theory, file: String, timeout: Long): Solver = apply(th, Some(file), timeout)
 
   def apply(th: Theory, file: Option[String], timeout: Long): Solver = {
-    new Solver(th, solver, solverArg, true, true, file, timeout)
+    new Solver(th, solver, solverArg, implicitDeclaration, incremental, file, timeout)
   }
 
 }
@@ -368,11 +368,11 @@ object Z3 {
   val solverArg = Array("-smt2", "-in")
 
   def apply(th: Theory) = {
-    new Solver(th, solver, solverArg, true, true, None, Solver.defaultTO)
+    new Solver(th, solver, solverArg, Solver.implicitDeclaration, Solver.incremental, None, Solver.defaultTO)
   }
   
   def apply(th: Theory, file: String) = {
-    new Solver(th, solver, solverArg, true, true, Some(file), Solver.defaultTO)
+    new Solver(th, solver, solverArg, Solver.implicitDeclaration, Solver.incremental, Some(file), Solver.defaultTO)
   }
 
 }
@@ -383,11 +383,19 @@ object CVC4 {
   val solverArg = Array("--lang=smt2", "--incremental")
 
   def apply(th: Theory) = {
-    new Solver(th, solver, solverArg, true, true, None, Solver.defaultTO)
+    var arg = solverArg
+    if (!Solver.incremental) {
+        arg = arg.dropRight(1)
+    }
+    new Solver(th, solver, arg, Solver.implicitDeclaration, Solver.incremental, None, Solver.defaultTO)
   }
   
   def apply(th: Theory, file: String) = {
-    new Solver(th, solver, solverArg, true, true, Some(file), Solver.defaultTO)
+    var arg = solverArg
+    if (!Solver.incremental) {
+        arg = arg.dropRight(1)
+    }
+    new Solver(th, solver, arg, Solver.implicitDeclaration, Solver.incremental, Some(file), Solver.defaultTO)
   }
 
 }
@@ -404,11 +412,19 @@ object CVC4MF {
                         "--incremental" )
 
   def apply(th: Theory) = {
-    new Solver(th, solver, solverArg, true, true, None, Solver.defaultTO)
+    var arg = solverArg
+    if (!Solver.incremental) {
+        arg = arg.dropRight(1)
+    }
+    new Solver(th, solver, arg, Solver.implicitDeclaration, Solver.incremental, None, Solver.defaultTO)
   }
   
   def apply(th: Theory, file: String) = {
-    new Solver(th, solver, solverArg, true, true, Some(file), Solver.defaultTO)
+    var arg = solverArg
+    if (!Solver.incremental) {
+        arg = arg.dropRight(1)
+    }
+    new Solver(th, solver, arg, Solver.implicitDeclaration, Solver.incremental, Some(file), Solver.defaultTO)
   }
 
 }
