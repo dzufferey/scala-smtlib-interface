@@ -2,13 +2,34 @@ package dzufferey.smtlib
 
 import dzufferey.utils.Misc
 
-sealed abstract class Def
+sealed abstract class Def {
+  def tpe: Type
+}
 sealed abstract class ValDef extends Def
-case class ValD(d: Double) extends ValDef { override def toString = d.toString }
-case class ValI(i: Long) extends ValDef { override def toString = i.toString }
-case class ValB(b: Boolean) extends ValDef { override def toString = b.toString }
-case class ValExt(idx: Int, tpe: Type) extends ValDef { override def toString = tpe+"!"+idx }
-case class FunDef(defs: List[(List[ValDef], ValDef)], default: ValDef) extends Def
+case class ValD(d: Double) extends ValDef {
+  override def toString = d.toString
+  def tpe: Type = Real
+}
+case class ValI(i: Long) extends ValDef {
+  override def toString = i.toString
+  def tpe: Type = Int
+}
+case class ValB(b: Boolean) extends ValDef {
+  override def toString = b.toString
+  def tpe: Type = Bool
+}
+case class ValExt(idx: Int, tp: Type) extends ValDef {
+  override def toString = tp+"!"+idx
+  def tpe: Type = tp
+}
+case class FunDef(defs: List[(List[ValDef], ValDef)], default: ValDef) extends Def {
+  def tpe: Type = {
+    defs.headOption match {
+      case Some((args, ret)) => Function(args.map(_.tpe), ret.tpe)
+      case None => default.tpe //FIXME not really
+    }
+  }
+}
 
 object Def {
 
@@ -100,17 +121,16 @@ class Model(domains: Map[Type, Set[ValExt]],
 
 object Model {
 
-
   def apply(cmds: List[Command], variables: Iterable[Variable], declared: Iterable[(Symbol, List[Type])]) = {
 
     val values: Map[String, ValExt] = (cmds.collect{
       case DeclareFun(id, Function(Nil, tpe)) =>
-        (id -> ValExt(id.split("!").last.toInt, tpe)) //z3 values
+        (id ->  ValExt(id.split("!").last.toInt, tpe)) //z3 values
     }).toMap
     val domains = values.values.groupBy(_.tpe).map{ case (k, v) => (k, v.toSet) }
 
     val toSym = declared.foldLeft(Map[String, Symbol]())( (acc, decl) => {
-      acc + (Names.overloadedSymbol(decl._1, decl._2) -> decl._1)
+      acc + (symFullName(decl._1, decl._2) -> decl._1)
     })
     //println("toSym: " + toSym)
 
@@ -319,11 +339,77 @@ object Model {
     new Model(domains, vars, there)
   }
 
+  private def symFullName(sym: Symbol, tpes: List[Type]): String = Names.overloadedSymbol(sym, tpes)
+
   private def collectCases(f: Formula): (List[(Formula, Formula)], Formula) = f match {
     case Application(UnInterpretedFct("ite",_,_), List(cnd, tr, fa)) =>
       val (acc, other) = collectCases(fa)
       ((cnd, tr) :: acc, other)
     case other => (Nil, other)
+  }
+  
+  private def tryParseVal(f: Formula): Option[ValDef] = f match {
+    case Literal(b: Boolean) => Some(ValB(b))
+    case Literal(l: Long) => Some(ValI(l))
+    case Minus(Literal(l: Long)) => Some(ValI(-l))
+    case Variable(id) if id.startsWith("@uc_") => //cvc4 values
+      val idx = id.reverse.takeWhile(_.isDigit).reverse
+      val tpe = id.substring(4, id.length - idx.length - 1) match {
+        case "Int" => Int
+        case "Bool" => Bool
+        case id => UnInterpreted(id)
+      }
+      Some(ValExt(idx.toInt, tpe))
+    case Variable(id) if id.split("!").length == 3 =>  //z3 value
+      val parts = id.split("!")
+      assert(parts(1) == "val")
+      val tpe = UnInterpreted(parts(0))
+      val idx = parts(2).toInt
+      Some(ValExt(idx, tpe))
+    case _ => None
+  }
+
+  private def tryGetFunDef(solver: Solver, domains: Map[Type, Set[ValDef]], toVar: Map[ValDef,Variable], sym: Symbol, args: List[Type]): Option[FunDef] = {
+    //TODO it is incomplete as some ValDef may only arise as the result of an Application
+    var res: List[(List[ValDef], ValDef)] = Nil
+    val sym2 = UnInterpretedFct(symFullName(sym, args))
+    def mkArgs(tpes: List[Type], stack: List[ValDef]): Unit = tpes match {
+      case t :: ts =>
+        domains(t).foreach( vd => mkArgs(ts, vd :: stack) )
+      case Nil =>
+        val args = stack.reverse
+        val f = Application(sym2, args.map(toVar))
+        solver.getValue(f) match {
+          case Some((_,f2) :: _) => res ::= (args -> tryParseVal(f2).get)
+          case _ => ()
+        }
+    }
+    sym.instanciateType(args) match {
+      case Function(argsT, ret) =>
+        mkArgs(argsT, Nil)
+        Some(FunDef(res, ValExt(-1, ret)))
+      case _ => None
+    }
+  }
+
+  //declared is the type params for polymorphic functions
+  //TODO it is incomplete as some ValDef may only arise as the result of an Application
+  def getPartialModel(solver: Solver, variables: Iterable[Variable], declared: Iterable[(Symbol, List[Type])]): Option[Model] = {
+    try {
+      solver.getValue(variables.toSeq: _*).map( lst => {
+        val constants = Map(lst.map{ case (id,v) => (id.asInstanceOf[Variable],tryParseVal(v).get)}: _*)
+        val extendedDomains = constants.values.groupBy(_.tpe).mapValues(_.toSet)
+        val domains = extendedDomains.filter{
+          case (UnInterpreted(_), _) => true
+          case _ => false
+        }.asInstanceOf[Map[Type,Set[ValExt]]]
+        val toVar: Map[ValDef,Variable] = constants.map{ case (a,b) => (b,a) }
+        val functions = Map(declared.toSeq.map{ case (sym, args) => (sym, tryGetFunDef(solver, extendedDomains, toVar, sym, args).get) }: _*)
+        new Model(domains, constants, functions)
+      })
+    } catch {
+      case _: Throwable => None
+    }
   }
 
 }

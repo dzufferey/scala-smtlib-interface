@@ -275,5 +275,34 @@ class SolverSuite extends FunSuite {
     assert(assignements == Some(List[(Formula, Formula)](x -> Literal(1))))
   }
 
+  test("get value 2") {
+    val t1 = UnInterpreted("T1")
+    val t2 = UnInterpreted("T2")
+    val a = Variable("a").setType(t1)
+    val b = Variable("b").setType(t2)
+    val f = UnInterpretedFct("f", Some(Function(List(t1), t2)), Nil)
+    val form = Not(Eq(f(a), b))
+    val solver = Solver(QF_UF)
+    solver.assert(form)
+    assert(solver.checkSat match { case Sat(_) => true; case _ => false }, "not sat ?!?")
+    val assignements = solver.getValue(a, b, f(a))
+    assert(assignements.isDefined && assignements.get.length == 3)
+  }
+  
+  test("get parial model") {
+    val t1 = UnInterpreted("T1")
+    val t2 = UnInterpreted("T2")
+    val a = Variable("a").setType(t1)
+    val b = Variable("b").setType(t2)
+    val f = UnInterpretedFct("f", Some(Function(List(t1), t2)), Nil)
+    val form = Not(Eq(f(a), b))
+    val solver = Solver(QF_UF)
+    solver.assert(form)
+    assert(solver.checkSat match { case Sat(_) => true; case _ => false }, "not sat ?!?")
+    val model = Model.getPartialModel(solver, List(a,b), List(f -> Nil))
+    //Console.println(model)
+    assert(model.isDefined)
+  }
+
 }
 

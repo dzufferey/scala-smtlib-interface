@@ -326,6 +326,7 @@ class Solver( th: Theory,
     res
   }
 
+  //warning, the returned terms are not typed and the variable should be interpreted as literal of UnInterpreted types
   def getValue(fs: Formula*): Option[List[(Formula,Formula)]] = {
     toSolver(GetValue(fs.toList))
     Parser.parseGetValueReply(fromSolver)
