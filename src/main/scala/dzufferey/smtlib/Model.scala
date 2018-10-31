@@ -1,6 +1,8 @@
 package dzufferey.smtlib
 
 import dzufferey.utils.Misc
+import dzufferey.utils._
+import dzufferey.utils.LogLevel._
 
 sealed abstract class Def {
   def tpe: Type
@@ -366,7 +368,9 @@ object Model {
       val tpe = UnInterpreted(parts(0))
       val idx = parts(2).toInt
       Some(ValExt(idx, tpe))
-    case _ => None
+    case other =>
+      Logger("smtlib", Debug, "tryParseVal: failed to parse value from " + other)
+      None
   }
 
   private def tryGetFunDef( solver: Solver,
@@ -375,24 +379,25 @@ object Model {
                             sym: Symbol,
                             args: List[Type]
                           ): (Option[FunDef], Map[ValDef,Formula])  = {
-    //TODO it is incomplete as some ValDef may only arise as the result of an Application
     var res: List[(List[ValDef], ValDef)] = Nil
     var repr2: Map[ValDef, Formula] = Map.empty
     val sym2 = UnInterpretedFct(symFullName(sym, args))
     def mkArgs(tpes: List[Type], stack: List[ValDef]): Unit = tpes match {
       case t :: ts =>
-        domains(t).foreach( vd => mkArgs(ts, vd :: stack) )
+        domains.getOrElse(t, Set[ValDef]()).foreach( vd => mkArgs(ts, vd :: stack) )
       case Nil =>
         val args = stack.reverse
         val f = Application(sym2, args.map(repr))
         solver.getValue(f) match {
           case Some((_,f2) :: _) =>
-            val ret = tryParseVal(f2).get
-            res ::= (args -> ret)
-            if (!repr.contains(ret)) {
-              repr2 += (ret -> f2)
+            for (ret <- tryParseVal(f2)) {
+              res ::= (args -> ret)
+              if (!repr.contains(ret)) {
+                repr2 += (ret -> f)
+              }
             }
-          case _ => ()
+          case _ => 
+            Logger("smtlib", Debug, "tryGetFunDef: failed to parse get value for " + f)
         }
     }
     val ofd = sym.instanciateType(args) match {
@@ -446,7 +451,9 @@ object Model {
         new Model(domains, constants, functions)
       })
     } catch {
-      case _: Throwable => None
+      case err: Exception =>
+        Logger("smtlib", Debug, "getPartialModel: " + err)
+        None
     }
   }
 

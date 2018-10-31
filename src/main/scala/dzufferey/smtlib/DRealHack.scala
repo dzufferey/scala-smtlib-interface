@@ -315,14 +315,11 @@ class DRealHack( th: Theory,
     toSolver(Exit)
     solverInput.close
     val res = fromSolver(timeout) match {
-      case s if s.startsWith("Solution:") =>
-        //TODO remove the last line
-        val endIdx = s.indexOf("delta-sat with delta = ")
-        val mdl = if (endIdx > 0) s.substring(0, endIdx) else s
-        Sat(tryParseModel(mdl))
       case s if s == "sat" || s.startsWith("delta-sat with delta = ") =>
         //get the model from stderr
         val acc = new StringBuilder()
+        acc.append(s)
+        acc.append("\n")
         while(solverError.ready) {
           acc.append(solverError.readLine)
           acc.append("\n")
@@ -403,6 +400,7 @@ object DRealParser extends scala.util.parsing.combinator.RegexParsers {
   def range: Parser[(Variable, Double, Double)] = (
     "(" ~> variable ~ ("," ~> num) ~ ("," ~> num <~ ")") ^^ { case id ~ lb ~ ub => (id, lb, ub) }
   | variable ~ (":" ~> nonEq ~> "=" ~> "[" ~> num) ~ ("," ~> num <~ "]") ^^ { case id ~ lb ~ ub => (id, lb, ub) }
+  | variable ~ (":" ~> "[" ~> num) ~ ("," ~> num <~ "]") ^^ { case id ~ lb ~ ub => (id, lb, ub) }
   | variable <~ ":" <~ nonEq <~ "=" <~ "[ -INFTY ]" ^^ { case id => (id, Double.NegativeInfinity, Double.NegativeInfinity) }
   | variable <~ ":" <~ nonEq <~ "=" <~ "[ INFTY ]" ^^ { case id => (id, Double.PositiveInfinity, Double.PositiveInfinity) }
   | variable <~ ":" <~ nonEq <~ "=" <~ "[ ENTIRE ]" ^^ { case id => (id, Double.NegativeInfinity, Double.PositiveInfinity) }
@@ -410,7 +408,7 @@ object DRealParser extends scala.util.parsing.combinator.RegexParsers {
 
   def ranges = rep(range)
 
-  def whole = ("delta-sat with the following box:" | "Solution:") ~> ranges
+  def whole = "delta-sat with delta = " ~> num ~> ranges
 
   def parse(str: String): Option[List[(Variable, Double, Double)]] = {
     val result = parseAll(whole, str)

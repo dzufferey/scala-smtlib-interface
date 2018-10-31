@@ -4,7 +4,7 @@ import org.scalatest._
 
 class DRealSuite extends FunSuite {
 
-  val sampleModel1 = """delta-sat with the following box:
+  val sampleModel1 = """delta-sat with delta = 0.1
 beam.dx : [-inf, 1015.625] = [0, 0]
 beam.dy : [-inf, 1015.625] = [0, 0]
 beam.dz : [ ENTIRE ] = [-162.9375, -153.875]
@@ -88,7 +88,7 @@ tail.q_k : [-inf, 1] = [-1, 1]
     assert(solver3.checkSat == UnSat)
   }
 
-  test("checking real division") {
+  ignore("checking real division") {
     val x = Variable("x").setType(Real)
     val form1 = Eq(Literal(1.0), Divides(x,x).setType(Real))
     val solver = new DRealHack(QF_NRA, "dreal", Array("--in"), None, true, false, None, 1)

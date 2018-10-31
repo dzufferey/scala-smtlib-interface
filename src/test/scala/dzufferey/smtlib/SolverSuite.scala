@@ -1,12 +1,9 @@
 package dzufferey.smtlib
 
 import org.scalatest._
+import dzufferey.utils.Logger
 
 class SolverSuite extends FunSuite {
-
-//import dzufferey.utils.Logger
-//Logger.moreVerbose
-//Logger.moreVerbose
 
   val pid = UnInterpreted("ProcessID")
 
@@ -320,12 +317,31 @@ class SolverSuite extends FunSuite {
   test("get parial model 3") {
     val a = Variable("a").setType(Int)
     val b = Variable("b").setType(Int)
-    val f = UnInterpretedFct("f", Some(Function(List(Int), Int)), Nil)
-    val form = Not(Eq(f(a), f(b)))
+    val f = UnInterpretedFct("f", Some(Function(List(Int, Int), Int)), Nil)
+    val form = Not(Eq(f(a, b), f(b, a)))
     val solver = Solver(QF_UFLIA)
     solver.assert(form)
     assert(solver.checkSat match { case Sat(_) => true; case _ => false }, "not sat ?!?")
     val model = solver.getPartialModel
+    assert(model.isDefined)
+  }
+
+  test("get parial model 4") {
+    val t1 = UnInterpreted("T1")
+    val t2 = UnInterpreted("T2")
+    val a = Variable("a").setType(Int)
+    val b = Variable("b").setType(Int)
+    val f = UnInterpretedFct("f", Some(Function(List(Int, Int), t1)), Nil)
+    val g = UnInterpretedFct("g", Some(Function(List(t1), t2)), Nil)
+    val form = Not(Eq(g(f(a, b)), g(f(b, a))))
+    val solver = Solver(QF_UFLIA)
+    solver.assert(form)
+    assert(solver.checkSat match { case Sat(_) => true; case _ => false }, "not sat ?!?")
+    //Logger.moreVerbose
+    //Logger.moreVerbose
+    val model = solver.getPartialModel
+    //Logger.lessVerbose
+    //Logger.lessVerbose
     //Console.println(model)
     assert(model.isDefined)
   }
