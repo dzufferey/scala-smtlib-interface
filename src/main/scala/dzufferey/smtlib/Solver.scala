@@ -331,6 +331,11 @@ class Solver( th: Theory,
     toSolver(GetValue(fs.toList))
     Parser.parseGetValueReply(fromSolver)
   }
+  
+  def getPartialModel: Option[Model] = {
+    val declaredS2 = declaredS.filter( d => !th.declaredFunctions(d._1))
+    Model.getPartialModel(this, declaredV, declaredS2)
+  }
 
 }
 

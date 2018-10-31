@@ -23,7 +23,7 @@ case class ValExt(idx: Int, tp: Type) extends ValDef {
   def tpe: Type = tp
 }
 case class FunDef(defs: List[(List[ValDef], ValDef)], default: ValDef) extends Def {
-  def tpe: Type = {
+  def tpe: Type = { //TODO does not take polymorphism into account
     defs.headOption match {
       case Some((args, ret)) => Function(args.map(_.tpe), ret.tpe)
       case None => default.tpe //FIXME not really
@@ -369,42 +369,80 @@ object Model {
     case _ => None
   }
 
-  private def tryGetFunDef(solver: Solver, domains: Map[Type, Set[ValDef]], toVar: Map[ValDef,Variable], sym: Symbol, args: List[Type]): Option[FunDef] = {
+  private def tryGetFunDef( solver: Solver,
+                            domains: Map[Type, Set[ValDef]],
+                            repr: Map[ValDef,Formula],
+                            sym: Symbol,
+                            args: List[Type]
+                          ): (Option[FunDef], Map[ValDef,Formula])  = {
     //TODO it is incomplete as some ValDef may only arise as the result of an Application
     var res: List[(List[ValDef], ValDef)] = Nil
+    var repr2: Map[ValDef, Formula] = Map.empty
     val sym2 = UnInterpretedFct(symFullName(sym, args))
     def mkArgs(tpes: List[Type], stack: List[ValDef]): Unit = tpes match {
       case t :: ts =>
         domains(t).foreach( vd => mkArgs(ts, vd :: stack) )
       case Nil =>
         val args = stack.reverse
-        val f = Application(sym2, args.map(toVar))
+        val f = Application(sym2, args.map(repr))
         solver.getValue(f) match {
-          case Some((_,f2) :: _) => res ::= (args -> tryParseVal(f2).get)
+          case Some((_,f2) :: _) =>
+            val ret = tryParseVal(f2).get
+            res ::= (args -> ret)
+            if (!repr.contains(ret)) {
+              repr2 += (ret -> f2)
+            }
           case _ => ()
         }
     }
-    sym.instanciateType(args) match {
+    val ofd = sym.instanciateType(args) match {
       case Function(argsT, ret) =>
         mkArgs(argsT, Nil)
         Some(FunDef(res, ValExt(-1, ret)))
       case _ => None
     }
+    (ofd, repr2)
+  }
+
+  private def mergeFD(d1: FunDef, d2: FunDef): FunDef = {
+    FunDef((d1.defs ++ d2.defs).toSet.toList, d1.default)
   }
 
   //declared is the type params for polymorphic functions
-  //TODO it is incomplete as some ValDef may only arise as the result of an Application
-  def getPartialModel(solver: Solver, variables: Iterable[Variable], declared: Iterable[(Symbol, List[Type])]): Option[Model] = {
+  //this might not finish if you have number in your model
+  def getPartialModel(solver: Solver,
+                      variables: Iterable[Variable],
+                      declared: Iterable[(Symbol, List[Type])]
+                     ): Option[Model] = {
     try {
       solver.getValue(variables.toSeq: _*).map( lst => {
         val constants = Map(lst.map{ case (id,v) => (id.asInstanceOf[Variable],tryParseVal(v).get)}: _*)
-        val extendedDomains = constants.values.groupBy(_.tpe).mapValues(_.toSet)
+        var extendedDomains: Map[Type, Set[ValDef]] = constants.values.groupBy(_.tpe).mapValues(_.toSet)
+        var repr: Map[ValDef,Formula] = constants.map{ case (a,b) => (b,a) }
+        var newRepr = true
+        var functions: Map[Symbol,FunDef] = Map.empty
+        while (newRepr) {
+          newRepr = false
+          for ( (sym,args) <- declared ) {
+            val (ofd, repr2) = tryGetFunDef(solver, extendedDomains, repr, sym, args)
+            for (fd <- ofd) {
+              val newFd = if (functions contains sym) mergeFD(functions(sym), fd) else fd
+              functions += (sym -> newFd)
+            }
+            if (!repr2.isEmpty) {
+              newRepr = true
+              repr ++= repr2
+              for (v <- repr2.keys) {
+                val values: Set[ValDef] = extendedDomains.getOrElse(v.tpe, Set.empty) + v
+                extendedDomains += (v.tpe -> values)
+              }
+            }
+          }
+        }
         val domains = extendedDomains.filter{
           case (UnInterpreted(_), _) => true
           case _ => false
         }.asInstanceOf[Map[Type,Set[ValExt]]]
-        val toVar: Map[ValDef,Variable] = constants.map{ case (a,b) => (b,a) }
-        val functions = Map(declared.toSeq.map{ case (sym, args) => (sym, tryGetFunDef(solver, extendedDomains, toVar, sym, args).get) }: _*)
         new Model(domains, constants, functions)
       })
     } catch {
