@@ -18,7 +18,7 @@ object Printer {
     "(" + printable(v.name) + " " + tpe(v.tpe) + ")"
   }
   
-  protected def printAttribute(a: Attribute)(implicit writer: BufferedWriter) {
+  protected def printAttribute(a: Attribute)(implicit writer: BufferedWriter): Unit = {
     writer.write(a.keyword)
     a match {
       case AttrKeyword(_) =>
@@ -38,7 +38,7 @@ object Printer {
   }
 
 
-  protected def printQuantifier(q: String, vars: Iterable[Variable], f: Formula)(implicit writer: BufferedWriter) {
+  protected def printQuantifier(q: String, vars: Iterable[Variable], f: Formula)(implicit writer: BufferedWriter): Unit = {
     writer.write("(")
     writer.write(q)
     writer.write(vars.map(asDecl).mkString(" (", " ", ") "))
@@ -101,7 +101,7 @@ object Printer {
     w1.toString
   }
 
-  def apply(implicit writer: BufferedWriter, f: Formula) {
+  def apply(implicit writer: BufferedWriter, f: Formula): Unit = {
     printFormula(f)
     //writer.newLine
   }

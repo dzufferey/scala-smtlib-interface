@@ -102,7 +102,7 @@ case object Wildcard extends Type {
 case class Function(args: List[Type], returns: Type) extends Type {
   override def toString = args.mkString("(","->","->") + returns + ")"
   override def arity = args.length
-  def freeParameters = (returns.freeParameters /: args)(_ ++ _.freeParameters)
+  def freeParameters = args.foldLeft(returns.freeParameters)(_ ++ _.freeParameters)
   def alpha(subst: Map[TypeVariable, Type]) = Function(args.map(_.alpha(subst)), returns.alpha(subst)) 
 }
 

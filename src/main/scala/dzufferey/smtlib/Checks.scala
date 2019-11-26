@@ -5,7 +5,7 @@ import dzufferey.utils.LogLevel._
 
 object Checks {
 
-  def apply(f: Formula) {
+  def apply(f: Formula): Unit = {
     Logger("smtlib.checks", Debug, "sanity checks for " + f)
     val traverser = new FormulaUtils.Traverser {
       override def traverse(f: Formula) = {

@@ -21,7 +21,7 @@ case class ValB(b: Boolean) extends ValDef {
   def tpe: Type = Bool
 }
 case class ValExt(idx: Int, tp: Type) extends ValDef {
-  override def toString = tp+"!"+idx
+  override def toString = tp.toString + "!" + idx
   def tpe: Type = tp
 }
 case class FunDef(defs: List[(List[ValDef], ValDef)], default: ValDef) extends Def {
@@ -189,7 +189,7 @@ object Model {
     var rest = cmds collect { case d: DefineFun => d }
     var defs = Map.empty[Symbol,Def]
 
-    def loop(fct: DefineFun => Option[(Symbol, Def)]) {
+    def loop(fct: DefineFun => Option[(Symbol, Def)]): Unit = {
       var progress = !rest.isEmpty
       while(progress) {
         progress = false
@@ -422,7 +422,7 @@ object Model {
     try {
       solver.getValue(variables.toSeq: _*).map( lst => {
         val constants = Map(lst.map{ case (id,v) => (id.asInstanceOf[Variable],tryParseVal(v).get)}: _*)
-        var extendedDomains: Map[Type, Set[ValDef]] = constants.values.groupBy(_.tpe).mapValues(_.toSet)
+        var extendedDomains: Map[Type, Set[ValDef]] = constants.values.groupBy(_.tpe).foldLeft(Map.empty[Type, Set[ValDef]])( (acc,kv) => acc + (kv._1 -> kv._2.toSet) )
         var repr: Map[ValDef,Formula] = constants.map{ case (a,b) => (b,a) }
         var newRepr = true
         var functions: Map[Symbol,FunDef] = Map.empty

@@ -1,5 +1,6 @@
 package dzufferey.smtlib
 
+import scala.language.implicitConversions
 
 object InlineOps {
 

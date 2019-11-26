@@ -90,7 +90,7 @@ object TextPrinter extends FormulaPrinter {
     case Variable(v) => writer.write(v)
     case Application(fct, args) => 
       if (fct.fix == Fix.Prefix) {
-        writer.write(fct + "(")
+        writer.write(fct.toString + "(")
         val it = args.iterator
         while(it.hasNext){
           printFormula(it.next)

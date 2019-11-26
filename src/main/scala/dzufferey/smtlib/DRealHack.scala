@@ -20,16 +20,16 @@ class DRealHackI(th: Theory,
   protected val stack = Stack[List[Formula]]()
   protected var current = List[Formula]()
 
-  def push {
+  def push: Unit = {
     stack.push(current)
     current = Nil
   }
   
-  def pop {
+  def pop: Unit = {
     current = stack.pop
   }
 
-  def assert(f: Formula) {
+  def assert(f: Formula): Unit = {
     current ::= f
   }
 
@@ -98,7 +98,7 @@ class DRealHack( th: Theory,
   ///////////////
   ///////////////
 
-  override def finalize {
+  override def finalize: Unit = {
     try {
       solver.exitValue
       fileDump.foreach(_.close)
@@ -108,7 +108,7 @@ class DRealHack( th: Theory,
     }
   }
 
-  protected def toSolver(cmd: String) {
+  protected def toSolver(cmd: String): Unit = {
     Logger("smtlib", Debug, "> " +cmd)
     solverInput.write(cmd)
     solverInput.newLine
@@ -120,7 +120,7 @@ class DRealHack( th: Theory,
     }
   }
   
-  protected def toSolver(cmd: Command) {
+  protected def toSolver(cmd: Command): Unit = {
     Logger("smtlib", Debug, "> " +cmd)
     Printer(solverInput, cmd)
     solverInput.newLine
@@ -172,7 +172,7 @@ class DRealHack( th: Theory,
     }
   }
 
-  def forceExit {
+  def forceExit: Unit = {
     solver.destroy 
     solverInput.close
     solverOutput.close
@@ -244,7 +244,7 @@ class DRealHack( th: Theory,
     newVars foreach declare
   }
   
-  def assert(f: Formula) {
+  def assert(f: Formula): Unit = {
     if (implicitDeclaration) {
       mkDeclarations(f)
     }
@@ -269,7 +269,7 @@ class DRealHack( th: Theory,
     checkSat()
   }
 
-  def declareODE(name: String, formula: Formula) {
+  def declareODE(name: String, formula: Formula): Unit = {
     if (implicitDeclaration) {
       mkDeclarations(formula)
       pushOnStack(Set(Variable(name).setType(Real)), declStack, declaredV)
@@ -285,7 +285,7 @@ class DRealHack( th: Theory,
 
   def pintegrate( minTime: Formula, maxTime: Formula,
                   preVars: List[Variable], postVars: List[Variable],
-                  holders: List[Variable]) {
+                  holders: List[Variable]): Unit = {
     val mit = Printer.toString(minTime)
     val mat = Printer.toString(maxTime)
     val pre = preVars.map(Printer.toString).mkString("["," ","]")
@@ -295,7 +295,7 @@ class DRealHack( th: Theory,
     toSolver(cmd)
   }
 
-  def assertForallT(mode: Int, minTime: Formula, maxTime: Formula, formula: Formula) {
+  def assertForallT(mode: Int, minTime: Formula, maxTime: Formula, formula: Formula): Unit = {
     val mit = Printer.toString(minTime)
     val mat = Printer.toString(maxTime)
     val f = Printer.toString(formula)

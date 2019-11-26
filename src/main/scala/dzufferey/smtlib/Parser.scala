@@ -32,11 +32,11 @@ object Parser extends StandardTokenParsers {
 
   override val lexical = new Lexer
 
-  lexical.delimiters += (
+  lexical.delimiters ++= List(
     "(", ")"
   )
   
-  lexical.reserved += (
+  lexical.reserved ++= List(
     "model",
     "assert",
     "declare-sort",

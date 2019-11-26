@@ -93,8 +93,8 @@ case class Application(fct: Symbol, args: List[Formula]) extends Formula {
   def toStringFull = "(" + fct.toString + args.map(_.toStringFull).mkString("(",", ",")") + ": " + tpe + ")"
 
   def alpha(map: Map[Variable, Variable]) = Application(fct, args.map(_.alpha(map)))
-  lazy val freeVariables = (Set[Variable]() /: args)(_ ++ _.freeVariables)
-  lazy val boundVariables = (Set[Variable]() /: args)(_ ++ _.boundVariables)
+  lazy val freeVariables = args.foldLeft(Set[Variable]())(_ ++ _.freeVariables)
+  lazy val boundVariables =  args.foldLeft(Set[Variable]())(_ ++ _.boundVariables)
 
 }
 
@@ -263,7 +263,7 @@ case object Select extends InterpretedFct("select", "$select") {
 object InterpretedFct {
   private var symbols: List[InterpretedFct] = Nil
   private var map: Map[String,InterpretedFct] = Map.empty
-  def add(s: InterpretedFct) {
+  def add(s: InterpretedFct): Unit = {
     symbols = s :: symbols
     map = s.allSymbols.foldLeft(map)( (m, sym) => {
       assert(!(map contains sym), "symbol redefinition: " + sym)
@@ -303,8 +303,8 @@ sealed abstract class BindingType
 
 case class Binding(binding: BindingType, vs: List[Variable], f: Formula) extends Formula {
 
-  override def toString = binding + " " + vs.mkString(" ") + ". " + f
-  def toStringFull = binding + " " + vs.map(_.toStringFull).mkString(" ") + ". " + f.toStringFull
+  override def toString = binding.toString + " " + vs.mkString(" ") + ". " + f
+  def toStringFull = binding.toString + " " + vs.map(_.toStringFull).mkString(" ") + ". " + f.toStringFull
 
   def alpha(map: Map[Variable, Variable]) = Binding(binding, vs, f.alpha(map -- vs))
   lazy val freeVariables = f.freeVariables -- vs

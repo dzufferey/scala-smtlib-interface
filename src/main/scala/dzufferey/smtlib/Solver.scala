@@ -67,7 +67,7 @@ class Solver( th: Theory,
   ///////////////
   ///////////////
 
-  override def finalize {
+  override def finalize: Unit = {
     try {
       solver.exitValue
       fileDump.foreach(_.close)
@@ -77,7 +77,7 @@ class Solver( th: Theory,
     }
   }
 
-  protected def toSolver(cmd: String) {
+  protected def toSolver(cmd: String): Unit = {
     Logger("smtlib", Debug, "> " +cmd)
     solverInput.write(cmd)
     solverInput.newLine
@@ -89,7 +89,7 @@ class Solver( th: Theory,
     }
   }
   
-  protected def toSolver(cmd: Command) {
+  protected def toSolver(cmd: Command): Unit = {
     Logger("smtlib", Debug, "> " +cmd)
     Printer(solverInput, cmd)
     solverInput.newLine
@@ -138,7 +138,7 @@ class Solver( th: Theory,
     }
   }
 
-  def forceExit {
+  def forceExit: Unit = {
     solver.destroy 
     solverInput.close
     solverOutput.close
@@ -219,14 +219,14 @@ class Solver( th: Theory,
     newVars foreach declare
   }
   
-  def assert(f: Formula) {
+  def assert(f: Formula): Unit = {
     if (implicitDeclaration) {
       mkDeclarations(f)
     }
     toSolver(Assert(f))
   }
   
-  def push {
+  def push: Unit = {
     if (incremental) {
       if (implicitDeclaration) {
         declStack.push(Set[Variable]())
@@ -240,7 +240,7 @@ class Solver( th: Theory,
     }
   }
   
-  def pop {
+  def pop: Unit = {
     if (incremental) {
       if (implicitDeclaration) {
         declaredV --= declStack.pop
@@ -270,7 +270,7 @@ class Solver( th: Theory,
   def getModel: Option[Model] = {
     toSolver(GetModel)
     Thread.sleep(100) //sleep a bit to let z3 make the model. TODO better!
-    Parser.parseModel(fromSolver).map( cmds => {
+    dzufferey.smtlib.Parser.parseModel(fromSolver).map( cmds => {
       Model(cmds, declaredV, declaredS)
     })
   }
@@ -329,7 +329,7 @@ class Solver( th: Theory,
   //warning, the returned terms are not typed and the variable should be interpreted as literal of UnInterpreted types
   def getValue(fs: Formula*): Option[List[(Formula,Formula)]] = {
     toSolver(GetValue(fs.toList))
-    Parser.parseGetValueReply(fromSolver)
+    dzufferey.smtlib.Parser.parseGetValueReply(fromSolver)
   }
   
   def getPartialModel: Option[Model] = {
