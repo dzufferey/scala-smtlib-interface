@@ -1,5 +1,7 @@
 # scala-smtlib-interface
 
+![Version 1.0.0](https://img.shields.io/badge/version-1.0.0-green.svg)
+
 A scala library to interface with SMT-solver using the SMT-LIB standard (v2.0)
 The library has been tested against Z3, CVC4, and dReal.
 
@@ -9,29 +11,13 @@ The library has been tested against Z3, CVC4, and dReal.
 See [`src/test/scala/dzufferey/smtlib/SolverSuite.scala`](src/test/scala/dzufferey/smtlib/SolverSuite.scala) for examples about using the library
 and [`src/test/scala/dzufferey/smtlib/FormulaSuite.scala`](src/test/scala/dzufferey/smtlib/FormulaSuite.scala) to write formula with a lightweight syntax.
 
-
-## Features
-
-* TODO ...
-
-
-## Compiling
-
-This project requires java 6 and can be build it using [sbt](http://www.scala-sbt.org/).
-
-In a console, execute:
-```
-$ sbt
-> compile
-```
-
 ## Using it
 
 To use it in your projects your need to add the following two lines in your `build.sbt`:
 ```scala
-resolvers +=  "dzufferey maven repo" at "https://github.com/dzufferey/my_mvn_repo/raw/master/repository"
+resolvers += "jitpack" at "https://jitpack.io"
 
-libraryDependencies += "io.github.dzufferey" %% "scala-smtlib-interface" % "0.1-SNAPSHOT"
+libraryDependencies += "io.github.dzufferey" %% "scala-smtlib-interface" % "1.0.0"
 ```
 
 The last line is required if you want to use it in some other project.
@@ -43,6 +29,17 @@ If you want to use it locally do not add the `resolvers` line but instead run `s
   It is more mature than this project and has support for more SMT-LIB commands/responses.
   However, we have a few life-simplifying features like typechecking formulas, automatically adding symbol declarations, (trying to) reconstruct models, timeouts, ...
 * [ScalaSMT](https://bitbucket.org/franck44/scalasmt) is a similar project that started from Scala SMT-LIB and then evolved into a new library.
+
+
+## Compiling
+
+This project requires java 8 and can be build it using [sbt](http://www.scala-sbt.org/).
+
+In a console, execute:
+```
+$ sbt
+> compile
+```
 
 
 ## ToDo

@@ -1,12 +1,12 @@
 name := "scala-smtlib-interface"
 
-organization := "io.github.dzufferey"
+organization := "com.github.dzufferey"
 
-version := "0.1-SNAPSHOT"
+version := "1.0.0"
 
-scalaVersion := "2.13.1"
+scalaVersion := "2.13.4"
 
-crossScalaVersions := Seq("2.12.10", "2.13.1")
+crossScalaVersions := Seq("2.12.12", "2.13.4")
 
 scalacOptions in Compile ++= Seq(
     "-unchecked",
@@ -14,26 +14,10 @@ scalacOptions in Compile ++= Seq(
     "-feature"
 )
 
+resolvers += "jitpack" at "https://jitpack.io"
+
 libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
-  "org.scalatest" %% "scalatest" % "3.0.8" % "test",
-  "io.github.dzufferey" %% "misc-scala-utils" % "0.1-SNAPSHOT"
+  "org.scalatest" %% "scalatest" % "3.2.2" % "test",
+  "io.github.dzufferey" %% "misc-scala-utils" % "1.0.0"
 )
-
-//addCompilerPlugin("org.psywerx.hairyfotr" %% "linter" % "0.1.17")
-
-resolvers +=  "dzufferey maven repo" at "https://github.com/dzufferey/my_mvn_repo/raw/master/repository"
-
-publishMavenStyle := true
-
-publishTo := Some(Resolver.file("file",  new File(Path.userHome.absolutePath+"/.m2/repository")))
-
-pomExtra :=
-  <licenses>
-    <license>
-      <name>Apache 2</name>
-      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-

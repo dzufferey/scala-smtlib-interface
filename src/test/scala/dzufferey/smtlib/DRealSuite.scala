@@ -1,8 +1,8 @@
 package dzufferey.smtlib
 
-import org.scalatest._
+import org.scalatest.funsuite.AnyFunSuite
 
-class DRealSuite extends FunSuite {
+class DRealSuite extends AnyFunSuite {
 
   val sampleModel1 = """delta-sat with delta = 0.1
 beam.dx : [-inf, 1015.625] = [0, 0]

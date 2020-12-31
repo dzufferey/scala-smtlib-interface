@@ -90,6 +90,8 @@ object Printer {
       } else {
         writer.write(printable(overloadedSymbol(fct, params)))
       }
+    case other =>
+      Logger.logAndThrow("smtlib", Error, s"printFormula1 did not catch $other")
   }
 
   def toString(f: Formula)= {

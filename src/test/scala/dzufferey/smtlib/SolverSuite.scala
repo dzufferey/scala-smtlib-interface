@@ -1,9 +1,9 @@
 package dzufferey.smtlib
 
-import org.scalatest._
+import org.scalatest.funsuite.AnyFunSuite
 import dzufferey.utils.Logger
 
-class SolverSuite extends FunSuite {
+class SolverSuite extends AnyFunSuite {
 
   val pid = UnInterpreted("ProcessID")
 

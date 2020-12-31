@@ -1,8 +1,8 @@
 package dzufferey.smtlib
 
-import org.scalatest._
+import org.scalatest.funsuite.AnyFunSuite
 
-class FormulaSuite extends FunSuite {
+class FormulaSuite extends AnyFunSuite {
 
 //import dzufferey.utils.Logger
 //Logger.moreVerbose

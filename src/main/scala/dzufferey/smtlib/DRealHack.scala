@@ -24,9 +24,9 @@ class DRealHackI(th: Theory,
     stack.push(current)
     current = Nil
   }
-  
+
   def pop: Unit = {
-    current = stack.pop
+    current = stack.pop()
   }
 
   def assert(f: Formula): Unit = {
@@ -72,10 +72,10 @@ class DRealHack( th: Theory,
 
   protected val declaredV = HashSet[Variable]()
   protected val declStack = Stack(Set[Variable]())
-  
+
   protected val declaredS = HashSet[(Symbol, List[Type])]()
   protected val symbolStack = Stack(Set[(Symbol, List[Type])]())
-  
+
   protected val declaredT = HashSet[Type]()
   protected val typeStack = Stack(Set[Type]())
 
@@ -119,7 +119,7 @@ class DRealHack( th: Theory,
       f.flush
     }
   }
-  
+
   protected def toSolver(cmd: Command): Unit = {
     Logger("smtlib", Debug, "> " +cmd)
     Printer(solverInput, cmd)
@@ -173,7 +173,7 @@ class DRealHack( th: Theory,
   }
 
   def forceExit: Unit = {
-    solver.destroy 
+    solver.destroy
     solverInput.close
     solverOutput.close
     solverError.close
@@ -203,7 +203,7 @@ class DRealHack( th: Theory,
     case Variable(v) => toSolver(DeclareFun(v, f.tpe))
     case other => Logger.logAndThrow("smtlib", Error, "not supported: " + other)
   }
-  
+
   def declare(sp: (Symbol, List[Type])) = {
     val (s, params) = sp
     s match {
@@ -230,7 +230,7 @@ class DRealHack( th: Theory,
   protected def pushOnStack[A](elts: Set[A], stack: Stack[Set[A]], decls: HashSet[A]): Set[A] = {
     val newElts = elts -- decls
     decls ++= newElts
-    val frame = stack.pop
+    val frame = stack.pop()
     stack.push(frame ++ newElts)
     newElts
   }
@@ -243,7 +243,7 @@ class DRealHack( th: Theory,
     val newVars = pushOnStack(f.freeVariables, declStack, declaredV)
     newVars foreach declare
   }
-  
+
   def assert(f: Formula): Unit = {
     if (implicitDeclaration) {
       mkDeclarations(f)
@@ -341,15 +341,15 @@ class DRealHack( th: Theory,
 }
 
 object DReal {
-  
+
   val solver = "dreal"
   val solverArg = Array[String]("--in")
-  
+
   def apply(th: Theory, precision: Double) = {
     assert(th == QF_NRA || th == QF_NRA_ODE)
     new DRealHack(th, solver, solverArg, Some(precision), true, false, None, 1)
   }
-  
+
   def apply(th: Theory, precision: Double, file: String) = {
     assert(th == QF_NRA || th == QF_NRA_ODE)
     new DRealHack(th, solver, solverArg, Some(precision), true, false, Some(file), 1)
@@ -360,7 +360,7 @@ object DReal {
     assert(th == QF_NRA || th == QF_NRA_ODE)
     new DRealHack(th, solver, solverArg, None, true, false, None, 1)
   }
-  
+
   def apply(th: Theory, file: String) = {
     assert(th == QF_NRA || th == QF_NRA_ODE)
     new DRealHack(th, solver, solverArg, None, true, false, Some(file), 1)
@@ -371,7 +371,7 @@ object DReal {
     assert(th == QF_NRA || th == QF_NRA_ODE)
     new DRealHackI(th, solver, solverArg, None, true, false, None, 1)
   }
-  
+
   def incremental(th: Theory, file: String) = {
     assert(th == QF_NRA || th == QF_NRA_ODE)
     new DRealHackI(th, solver, solverArg, None, true, false, Some(file), 1)

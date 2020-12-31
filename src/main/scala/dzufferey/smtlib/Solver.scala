@@ -205,7 +205,7 @@ class Solver( th: Theory,
   protected def pushOnStack[A](elts: Set[A], stack: Stack[Set[A]], decls: HashSet[A]): Set[A] = {
     val newElts = elts -- decls
     decls ++= newElts
-    val frame = stack.pop
+    val frame = stack.pop()
     stack.push(frame ++ newElts)
     newElts
   }
@@ -243,9 +243,9 @@ class Solver( th: Theory,
   def pop: Unit = {
     if (incremental) {
       if (implicitDeclaration) {
-        declaredV --= declStack.pop
-        declaredS --= symbolStack.pop
-        declaredT --= typeStack.pop
+        declaredV --= declStack.pop()
+        declaredS --= symbolStack.pop()
+        declaredT --= typeStack.pop()
       }
       Logger.assert(stackCounter > 0, "smtlib", "pop -> stackCounter = " + stackCounter)
       toSolver(Pop)

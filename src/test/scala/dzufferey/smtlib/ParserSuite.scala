@@ -1,8 +1,8 @@
 package dzufferey.smtlib
 
-import org.scalatest._
+import org.scalatest.funsuite.AnyFunSuite
 
-class ParserSuite extends FunSuite {
+class ParserSuite extends AnyFunSuite {
 
   test("parsing term 0"){
     val model = Parser.parseTerm("(and (not (= x t)) (= y t))")

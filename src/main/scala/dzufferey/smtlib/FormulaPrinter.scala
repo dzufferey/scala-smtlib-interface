@@ -40,7 +40,7 @@ object HtmlPrinter extends FormulaPrinter {
         if(fct.priority < priority) writer.write("<mo>(</mo>") 
         val it = args.iterator
         while(it.hasNext){
-          printFormula(it.next, fct.priority)
+          printFormula(it.next(), fct.priority)
           if (it.hasNext) writer.write("<mo>"+fct+"</mo>")
         }
         if(fct.priority < priority) writer.write("<mo>)</mo>") 
@@ -56,7 +56,7 @@ object HtmlPrinter extends FormulaPrinter {
       writer.write("<mo>" + (if (b == Exists) "∃" else "∀") + "</mo>")
       val it = vars.iterator
       while(it.hasNext){
-        printFormula(it.next)
+        printFormula(it.next())
         if (it.hasNext) writer.write("<mo>,</mo>")
       }
       writer.write("<mo>.</mo>")
@@ -75,7 +75,7 @@ object HtmlPrinter extends FormulaPrinter {
     writer.write("<math><mtable columnalign=\"left\"><mtr><mtd></mtd><mtd>")
     val it = fs.iterator
     while(it.hasNext){
-      printFormula(it.next)
+      printFormula(it.next())
       if (it.hasNext) writer.write("</mtd></mtr><mtr><mtd><mo>∧</mo></mtd><mtd>")
     }
     writer.write("</mtd></mtr></mtable></math>")
@@ -93,7 +93,7 @@ object TextPrinter extends FormulaPrinter {
         writer.write(fct.toString + "(")
         val it = args.iterator
         while(it.hasNext){
-          printFormula(it.next)
+          printFormula(it.next())
           if (it.hasNext) writer.write(", ")
         }
         writer.write(")")
@@ -101,7 +101,7 @@ object TextPrinter extends FormulaPrinter {
         if(fct.priority < priority) writer.write("(") 
         val it = args.iterator
         while(it.hasNext){
-          printFormula(it.next, fct.priority)
+          printFormula(it.next(), fct.priority)
           if (it.hasNext) writer.write(" " + fct + " ")
         }
         if(fct.priority < priority) writer.write(")") 
@@ -109,7 +109,7 @@ object TextPrinter extends FormulaPrinter {
         writer.write("(")
         val it = args.iterator
         while(it.hasNext){
-          printFormula(it.next)
+          printFormula(it.next())
           if (it.hasNext) writer.write(", ")
         }
         writer.write(")"+fct)
@@ -119,7 +119,7 @@ object TextPrinter extends FormulaPrinter {
       writer.write(if (b == Exists) "∃" else "∀")
       val it = vars.iterator
       while(it.hasNext){
-        printFormula(it.next)
+        printFormula(it.next())
         if (it.hasNext) writer.write(", ")
       }
       writer.write(". ")
@@ -131,7 +131,7 @@ object TextPrinter extends FormulaPrinter {
     writer.write("  ")
     val it = fs.iterator
     while(it.hasNext){
-      printFormula(it.next)
+      printFormula(it.next())
       if (it.hasNext) {
         writer.newLine
         writer.write("∧ ")
