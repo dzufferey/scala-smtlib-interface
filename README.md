@@ -17,7 +17,7 @@ To use it in your projects your need to add the following two lines in your `bui
 ```scala
 resolvers += "jitpack" at "https://jitpack.io"
 
-libraryDependencies += "io.github.dzufferey" %% "scala-smtlib-interface" % "1.0.0"
+libraryDependencies += "com.github.dzufferey" %% "scala-smtlib-interface" % "1.0.0"
 ```
 
 The last line is required if you want to use it in some other project.
